@@ -1,10 +1,15 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { BookOpen, Clock, Users, CheckCircle2, BarChart3, ListChecks } from 'lucide-react'
+import { BookOpen, Clock, Users, CheckCircle2, BarChart3, ListChecks, FileDown, Loader2, QrCode, X } from 'lucide-react'
 import useStore from '../store/useStore'
+import QRCodeImage from '../components/QRCodeImage'
+import { downloadProgramPdf } from '../utils/programPdf'
 
 export default function PublicShare() {
   const { token } = useParams()
   const { programs, employees, company } = useStore()
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [showQr, setShowQr] = useState(false)
 
   const program = programs.find((p) => p.shareToken === token)
 
@@ -42,6 +47,18 @@ export default function PublicShare() {
     { label: 'Completion Rate', value: `${completionRate}%`, icon: CheckCircle2 },
   ]
 
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
+
+  const handleDownloadPdf = async () => {
+    if (pdfLoading) return
+    setPdfLoading(true)
+    try {
+      await downloadProgramPdf(program, company, shareUrl)
+    } finally {
+      setPdfLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-100">
@@ -57,11 +74,34 @@ export default function PublicShare() {
             </div>
           )}
           <p className="text-sm font-semibold text-gray-900">{company?.name}</p>
-          <span className="ml-auto text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500 font-medium">
+          <span className="ml-auto hidden sm:inline-flex text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500 font-medium">
             Public Dashboard
           </span>
+          <button onClick={() => setShowQr(true)} className="btn-ghost p-2" title="Show QR code">
+            <QrCode size={16} />
+          </button>
+          <button
+            onClick={handleDownloadPdf}
+            disabled={pdfLoading}
+            className="btn-secondary flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-60"
+          >
+            {pdfLoading ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
+            <span className="hidden sm:inline">Download PDF</span>
+          </button>
         </div>
       </div>
+
+      {showQr && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setShowQr(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 text-center" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold text-gray-900">Scan to open</p>
+              <button onClick={() => setShowQr(false)} className="btn-ghost p-1.5"><X size={16} /></button>
+            </div>
+            <QRCodeImage value={shareUrl} size={200} />
+          </div>
+        </div>
+      )}
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         {program.headerImage && (

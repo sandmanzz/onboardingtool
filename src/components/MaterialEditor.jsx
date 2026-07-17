@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import {
   Video, ListChecks, FileText, Plus, X, Check,
-  ClipboardList, Wrench, FileSignature, Calendar, Camera, Upload, Paperclip,
+  ClipboardList, Wrench, FileSignature, Calendar, Upload, Paperclip,
+  ChevronDown, FileCheck2,
 } from 'lucide-react'
 import RichTextEditor from './RichTextEditor'
 
@@ -26,12 +27,13 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
   const [content, setContent] = useState(initial?.content || '')
   const [duration, setDuration] = useState(initial?.duration || '')
 
-  // checklist — normalize legacy string items into { text, photoRequired } objects
+  // checklist — normalize legacy string items into { text, description, photoRequired } objects
   const normalizeItems = (raw) =>
-    raw.map((it) => (typeof it === 'string' ? { text: it, photoRequired: false } : it))
+    raw.map((it) => (typeof it === 'string' ? { text: it, description: '', photoRequired: false } : { description: '', ...it }))
   const [items, setItems] = useState(
-    initial?.items?.length ? normalizeItems(initial.items) : [{ text: '', photoRequired: false }]
+    initial?.items?.length ? normalizeItems(initial.items) : [{ text: '', description: '', photoRequired: false }]
   )
+  const [expandedItems, setExpandedItems] = useState({})
 
   // quiz
   const [questions, setQuestions] = useState(
@@ -55,12 +57,16 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
   const [notes, setNotes] = useState(initial?.notes || '')
 
   // ── Checklist helpers ────────────────────────────────────────────────────
-  const addItem = () => setItems((i) => [...i, { text: '', photoRequired: false }])
+  const addItem = () => setItems((i) => [...i, { text: '', description: '', photoRequired: false }])
   const removeItem = (idx) => setItems((i) => i.filter((_, j) => j !== idx))
   const updateItem = (idx, val) =>
     setItems((i) => i.map((x, j) => (j === idx ? { ...x, text: val } : x)))
-  const togglePhotoRequired = (idx) =>
+  const updateItemDescription = (idx, val) =>
+    setItems((i) => i.map((x, j) => (j === idx ? { ...x, description: val } : x)))
+  const toggleProofRequired = (idx) =>
     setItems((i) => i.map((x, j) => (j === idx ? { ...x, photoRequired: !x.photoRequired } : x)))
+  const toggleExpanded = (idx) =>
+    setExpandedItems((e) => ({ ...e, [idx]: !e[idx] }))
 
   // ── Document helpers ─────────────────────────────────────────────────────
   const handleFileChange = (e) => {
@@ -197,33 +203,70 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
         <div>
           <label className="label">Checklist Items</label>
           <div className="space-y-2">
-            {items.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded border-2 border-gray-300 flex-shrink-0" />
-                <input
-                  className="input"
-                  placeholder={`Item ${idx + 1}`}
-                  value={item.text}
-                  onChange={(e) => updateItem(idx, e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') addItem() }}
-                />
-                <button
-                  type="button"
-                  title={item.photoRequired ? 'Photo required — click to disable' : 'Require a photo to complete this item'}
-                  onClick={() => togglePhotoRequired(idx)}
-                  className={`p-1.5 rounded shrink-0 transition-colors ${
-                    item.photoRequired ? 'bg-brand-100 text-brand-700' : 'text-gray-300 hover:text-gray-500 hover:bg-gray-100'
-                  }`}
-                >
-                  <Camera size={14} />
-                </button>
-                {items.length > 1 && (
-                  <button onClick={() => removeItem(idx)} className="text-gray-400 hover:text-red-500 p-1 rounded">
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-            ))}
+            {items.map((item, idx) => {
+              const isOpen = !!expandedItems[idx]
+              return (
+                <div key={idx} className="rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="flex items-center gap-2 p-2 bg-white">
+                    <div className="w-4 h-4 rounded border-2 border-gray-300 flex-shrink-0" />
+                    <input
+                      className="input"
+                      placeholder={`Item ${idx + 1}`}
+                      value={item.text}
+                      onChange={(e) => updateItem(idx, e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') addItem() }}
+                    />
+                    <button
+                      type="button"
+                      title={isOpen ? 'Hide detail & proof settings' : 'Add detail or require proof'}
+                      onClick={() => toggleExpanded(idx)}
+                      className={`p-1.5 rounded shrink-0 transition-colors ${
+                        isOpen || item.description || item.photoRequired
+                          ? 'bg-brand-100 text-brand-700'
+                          : 'text-gray-300 hover:text-gray-500 hover:bg-gray-100'
+                      }`}
+                    >
+                      <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {items.length > 1 && (
+                      <button onClick={() => removeItem(idx)} className="text-gray-400 hover:text-red-500 p-1 rounded shrink-0">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  {isOpen && (
+                    <div className="p-3 pt-2.5 bg-gray-50 border-t border-gray-200 space-y-2.5">
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 mb-1 block">
+                          Detailed explanation (optional)
+                        </label>
+                        <textarea
+                          className="textarea text-sm"
+                          rows={2}
+                          placeholder="Explain exactly what 'done' looks like for this item — e.g. which form to use, who to check in with, what counts as complete..."
+                          value={item.description}
+                          onChange={(e) => updateItemDescription(idx, e.target.value)}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toggleProofRequired(idx)}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <div className={`w-4.5 h-4.5 rounded border-2 flex items-center justify-center transition-colors ${item.photoRequired ? 'bg-brand-600 border-brand-600' : 'border-gray-300 bg-white'}`}>
+                          {item.photoRequired && <Check size={11} className="text-white" />}
+                        </div>
+                        <span className="text-gray-700 flex items-center gap-1.5">
+                          <FileCheck2 size={13} className="text-gray-400" />
+                          Require proof upload (photo or file) before this can be checked off
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
             <button
               onClick={addItem}
               className="flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-700 font-medium"
@@ -232,8 +275,8 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
               Add item
             </button>
             <p className="text-xs text-gray-400 flex items-center gap-1.5">
-              <Camera size={12} />
-              Click the camera icon on an item to require a photo before it can be checked off
+              <ChevronDown size={12} />
+              Click the arrow on an item to add a detailed explanation or require proof of completion
             </p>
           </div>
         </div>
