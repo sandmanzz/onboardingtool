@@ -1,25 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, Video,
-  ListChecks, FileText, Save, Eye, GripVertical, Edit2,
-  Check, X, ChevronRight, Play
+  ListChecks, FileText, Save, Eye, Edit2,
+  Check, X, ChevronRight, ClipboardList, Wrench, FileSignature, Calendar, Clock,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import MaterialEditor from '../components/MaterialEditor'
 
 const MATERIAL_TYPES = [
-  { type: 'video', icon: Video, label: 'Video', color: 'text-purple-600 bg-purple-50', desc: 'YouTube, Vimeo, or direct URL' },
-  { type: 'checklist', icon: ListChecks, label: 'Checklist', color: 'text-green-600 bg-green-50', desc: 'Tasks employees must complete' },
-  { type: 'reading', icon: FileText, label: 'Reading', color: 'text-blue-600 bg-blue-50', desc: 'Articles, docs, or written content' },
+  { type: 'video', icon: Video, label: 'Video', color: 'text-purple-600 bg-purple-50' },
+  { type: 'reading', icon: FileText, label: 'Reading', color: 'text-blue-600 bg-blue-50' },
+  { type: 'checklist', icon: ListChecks, label: 'Checklist', color: 'text-green-600 bg-green-50' },
+  { type: 'quiz', icon: ClipboardList, label: 'Quiz', color: 'text-amber-600 bg-amber-50' },
+  { type: 'task', icon: Wrench, label: 'Task', color: 'text-orange-600 bg-orange-50' },
+  { type: 'document', icon: FileSignature, label: 'Document', color: 'text-rose-600 bg-rose-50' },
+  { type: 'meeting', icon: Calendar, label: 'Meeting', color: 'text-indigo-600 bg-indigo-50' },
 ]
-
-function MaterialTypeIcon({ type, size = 16 }) {
-  const conf = MATERIAL_TYPES.find((t) => t.type === type)
-  if (!conf) return null
-  const Icon = conf.icon
-  return <span className={`inline-flex items-center justify-center rounded-md p-1 ${conf.color}`}><Icon size={size} /></span>
-}
 
 export default function ProgramEditor() {
   const { id } = useParams()
@@ -66,10 +63,9 @@ export default function ProgramEditor() {
 
   const handleAddStage = () => {
     if (!newStageName.trim() || !activeProgramId) return
-    addStage(activeProgramId, { name: newStageName.trim(), description: '' })
+    addStage(activeProgramId, { name: newStageName.trim(), description: '', deadline: null })
     setNewStageName('')
     setShowAddStage(false)
-    // expand the new stage
     const prog = useStore.getState().programs.find((p) => p.id === activeProgramId)
     if (prog) setExpandedStage(prog.stages.slice(-1)[0]?.id)
   }
@@ -110,25 +106,23 @@ export default function ProgramEditor() {
 
       {/* Program Info */}
       <div className="card p-6 mb-5">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">
-          Program Details
-        </h2>
+        <h2 className="text-base font-semibold text-gray-900 mb-4">Program Details</h2>
         <div className="space-y-4">
           <div>
             <label className="label">Program Name *</label>
             <input
               className="input"
-              placeholder="e.g. Engineering Onboarding, Sales Ramp-Up"
+              placeholder="e.g. Kitchen Staff Onboarding, Waiter Training"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             />
           </div>
           <div>
-            <label className="label">Description</label>
+            <label className="label">Introduction / Description</label>
             <textarea
               className="textarea"
               rows={2}
-              placeholder="What will new employees learn and accomplish?"
+              placeholder="What will employees learn and accomplish in this program?"
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             />
@@ -138,17 +132,17 @@ export default function ProgramEditor() {
               <label className="label">Target Role</label>
               <input
                 className="input"
-                placeholder="e.g. Software Engineer"
+                placeholder="e.g. Kitchen Staff, Waiter"
                 value={form.targetRole}
                 onChange={(e) => setForm((f) => ({ ...f, targetRole: e.target.value }))}
               />
             </div>
             <div>
-              <label className="label">Duration (days)</label>
+              <label className="label">Total Duration (days)</label>
               <input
                 className="input"
                 type="number"
-                placeholder="e.g. 30"
+                placeholder="e.g. 7"
                 value={form.estimatedDays}
                 onChange={(e) => setForm((f) => ({ ...f, estimatedDays: e.target.value }))}
               />
@@ -197,7 +191,6 @@ export default function ProgramEditor() {
             </h2>
           </div>
 
-          {/* Stage list */}
           <div className="space-y-3">
             {(currentProgram?.stages || []).map((stage, idx) => {
               const isExpanded = expandedStage === stage.id
@@ -205,7 +198,6 @@ export default function ProgramEditor() {
 
               return (
                 <div key={stage.id} className="card overflow-hidden">
-                  {/* Stage header */}
                   <div
                     className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => setExpandedStage(isExpanded ? null : stage.id)}
@@ -230,9 +222,17 @@ export default function ProgramEditor() {
                     ) : (
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 text-sm">{stage.name}</p>
-                        <p className="text-xs text-gray-400">
-                          {stage.materials.length} material{stage.materials.length !== 1 ? 's' : ''}
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-xs text-gray-400">
+                            {stage.materials.length} material{stage.materials.length !== 1 ? 's' : ''}
+                          </p>
+                          {stage.deadline && (
+                            <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md">
+                              <Clock size={10} />
+                              Due day {stage.deadline}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     )}
 
@@ -272,25 +272,42 @@ export default function ProgramEditor() {
                     </div>
                   </div>
 
-                  {/* Stage content */}
                   {isExpanded && (
                     <div className="border-t border-gray-100 px-4 pb-4">
-                      <div className="pt-3 mb-3">
-                        <label className="label">Stage Description (optional)</label>
-                        <textarea
-                          className="textarea"
-                          rows={2}
-                          placeholder="What should employees accomplish in this stage?"
-                          value={stage.description || ''}
-                          onChange={(e) =>
-                            updateStage(activeProgramId, stage.id, {
-                              description: e.target.value,
-                            })
-                          }
-                        />
+                      {/* Stage cosmetics */}
+                      <div className="pt-3 mb-4 space-y-3">
+                        <div>
+                          <label className="label">Stage Introduction (shown to employees)</label>
+                          <textarea
+                            className="textarea"
+                            rows={2}
+                            placeholder="Welcome text or instructions shown at the top of this stage..."
+                            value={stage.description || ''}
+                            onChange={(e) =>
+                              updateStage(activeProgramId, stage.id, { description: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Clock size={14} className="text-gray-400 shrink-0" />
+                          <label className="label mb-0 shrink-0">Complete by day</label>
+                          <input
+                            className="input w-20"
+                            type="number"
+                            min={1}
+                            placeholder="e.g. 3"
+                            value={stage.deadline || ''}
+                            onChange={(e) =>
+                              updateStage(activeProgramId, stage.id, {
+                                deadline: e.target.value ? Number(e.target.value) : null,
+                              })
+                            }
+                          />
+                          <span className="text-sm text-gray-400">from start date</span>
+                        </div>
                       </div>
 
-                      {/* Materials */}
+                      {/* Materials list */}
                       <div className="space-y-2 mb-3">
                         {stage.materials.map((mat) => {
                           const conf = MATERIAL_TYPES.find((t) => t.type === mat.type)
@@ -331,17 +348,17 @@ export default function ProgramEditor() {
                       {/* Add material */}
                       <div>
                         <p className="text-xs font-medium text-gray-500 mb-2">Add material:</p>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                           {MATERIAL_TYPES.map(({ type: mType, icon: Icon, label, color }) => (
                             <button
                               key={mType}
                               onClick={() => setAddingMaterial({ stageId: stage.id, defaultType: mType })}
-                              className="flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 border-dashed border-gray-200 hover:border-brand-400 hover:bg-brand-50/30 transition-all text-center"
+                              className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 border-dashed border-gray-200 hover:border-brand-400 hover:bg-brand-50/30 transition-all text-center"
                             >
-                              <span className={`p-2 rounded-lg ${color}`}>
-                                <Icon size={16} />
+                              <span className={`p-1.5 rounded-lg ${color}`}>
+                                <Icon size={14} />
                               </span>
-                              <span className="text-xs font-medium text-gray-600">{label}</span>
+                              <span className="text-[11px] font-medium text-gray-600">{label}</span>
                             </button>
                           ))}
                         </div>
@@ -353,12 +370,11 @@ export default function ProgramEditor() {
             })}
           </div>
 
-          {/* Add stage */}
           {showAddStage ? (
             <div className="card p-4 mt-3 flex items-center gap-3">
               <input
                 className="input flex-1"
-                placeholder="Stage name (e.g. Week 1: Company Overview)"
+                placeholder="Stage name (e.g. Day 1–2: Food Safety)"
                 value={newStageName}
                 onChange={(e) => setNewStageName(e.target.value)}
                 onKeyDown={(e) => {
@@ -386,20 +402,17 @@ export default function ProgramEditor() {
         </div>
       )}
 
-      {/* Material editing modal */}
+      {/* Edit material modal */}
       {editingMaterial && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <h3 className="font-semibold text-gray-900">Edit Material</h3>
-              <button
-                onClick={() => setEditingMaterial(null)}
-                className="btn-ghost p-1.5"
-              >
+              <button onClick={() => setEditingMaterial(null)} className="btn-ghost p-1.5">
                 <X size={18} />
               </button>
             </div>
-            <div className="p-5">
+            <div className="p-5 overflow-y-auto">
               <MaterialEditor
                 initial={editingMaterial.material}
                 onSave={(data) => {
@@ -413,17 +426,17 @@ export default function ProgramEditor() {
         </div>
       )}
 
-      {/* Add material with type selection */}
+      {/* Add material modal */}
       {addingMaterial && typeof addingMaterial === 'object' && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <h3 className="font-semibold text-gray-900">Add Material</h3>
               <button onClick={() => setAddingMaterial(null)} className="btn-ghost p-1.5">
                 <X size={18} />
               </button>
             </div>
-            <div className="p-5">
+            <div className="p-5 overflow-y-auto">
               <MaterialEditor
                 defaultType={addingMaterial.defaultType}
                 onSave={(data) => {

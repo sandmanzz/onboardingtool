@@ -12,6 +12,7 @@ import Preview from './pages/Preview'
 import Employees from './pages/Employees'
 import EmployeeDetail from './pages/EmployeeDetail'
 import OwnerDashboard from './pages/OwnerDashboard'
+import Performance from './pages/Performance'
 
 function RequireAuth({ children }) {
   const { isSetupComplete, currentUser } = useStore()
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/employees" element={<Employees />} />
           <Route path="/employees/new" element={<EmployeeDetail />} />
           <Route path="/employees/:id" element={<EmployeeDetail />} />
+          <Route path="/performance" element={<Performance />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>

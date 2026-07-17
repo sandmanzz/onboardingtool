@@ -1,32 +1,92 @@
 import { useState } from 'react'
-import { Video, ListChecks, FileText, Plus, X, Check } from 'lucide-react'
+import {
+  Video, ListChecks, FileText, Plus, X, Check,
+  ClipboardList, Wrench, FileSignature, Calendar,
+} from 'lucide-react'
 
 const TYPES = [
   { type: 'video', icon: Video, label: 'Video', color: 'text-purple-600 bg-purple-50 border-purple-200' },
-  { type: 'checklist', icon: ListChecks, label: 'Checklist', color: 'text-green-600 bg-green-50 border-green-200' },
   { type: 'reading', icon: FileText, label: 'Reading', color: 'text-blue-600 bg-blue-50 border-blue-200' },
+  { type: 'checklist', icon: ListChecks, label: 'Checklist', color: 'text-green-600 bg-green-50 border-green-200' },
+  { type: 'quiz', icon: ClipboardList, label: 'Quiz', color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  { type: 'task', icon: Wrench, label: 'Task', color: 'text-orange-600 bg-orange-50 border-orange-200' },
+  { type: 'document', icon: FileSignature, label: 'Document', color: 'text-rose-600 bg-rose-50 border-rose-200' },
+  { type: 'meeting', icon: Calendar, label: 'Meeting', color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
 ]
+
+const EMPTY_QUESTION = () => ({ question: '', options: ['', '', '', ''], correct: 0 })
 
 export default function MaterialEditor({ initial, defaultType, onSave, onCancel }) {
   const [type, setType] = useState(initial?.type || defaultType || 'video')
   const [title, setTitle] = useState(initial?.title || '')
+
+  // video / reading
   const [url, setUrl] = useState(initial?.url || '')
   const [content, setContent] = useState(initial?.content || '')
-  const [items, setItems] = useState(initial?.items || [''])
   const [duration, setDuration] = useState(initial?.duration || '')
 
+  // checklist
+  const [items, setItems] = useState(initial?.items?.length ? initial.items : [''])
+
+  // quiz
+  const [questions, setQuestions] = useState(
+    initial?.questions?.length ? initial.questions : [EMPTY_QUESTION()]
+  )
+  const [passingScore, setPassingScore] = useState(initial?.passingScore ?? 75)
+
+  // task
+  const [instructions, setInstructions] = useState(initial?.instructions || '')
+  const [requiresConfirmation, setRequiresConfirmation] = useState(initial?.requiresConfirmation ?? true)
+
+  // document
+  const [description, setDescription] = useState(initial?.description || '')
+  const [acknowledgmentRequired, setAcknowledgmentRequired] = useState(initial?.acknowledgmentRequired ?? true)
+
+  // meeting
+  const [meetingWith, setMeetingWith] = useState(initial?.with || '')
+  const [durationMin, setDurationMin] = useState(initial?.durationMin || 30)
+  const [notes, setNotes] = useState(initial?.notes || '')
+
+  // ── Checklist helpers ────────────────────────────────────────────────────
   const addItem = () => setItems((i) => [...i, ''])
   const removeItem = (idx) => setItems((i) => i.filter((_, j) => j !== idx))
-  const updateItem = (idx, val) =>
-    setItems((i) => i.map((x, j) => (j === idx ? val : x)))
+  const updateItem = (idx, val) => setItems((i) => i.map((x, j) => (j === idx ? val : x)))
+
+  // ── Quiz helpers ─────────────────────────────────────────────────────────
+  const addQuestion = () => setQuestions((q) => [...q, EMPTY_QUESTION()])
+  const removeQuestion = (qi) => setQuestions((q) => q.filter((_, i) => i !== qi))
+  const updateQuestion = (qi, field, val) =>
+    setQuestions((q) => q.map((qq, i) => (i === qi ? { ...qq, [field]: val } : qq)))
+  const updateOption = (qi, oi, val) =>
+    setQuestions((q) =>
+      q.map((qq, i) =>
+        i !== qi ? qq : { ...qq, options: qq.options.map((o, j) => (j === oi ? val : o)) }
+      )
+    )
 
   const handleSave = () => {
     if (!title.trim()) return
-    const data = { type, title }
-    if (type === 'video') { data.url = url; data.duration = duration }
-    if (type === 'reading') { data.url = url; data.content = content }
-    if (type === 'checklist') { data.items = items.filter((i) => i.trim()) }
-    onSave(data)
+    const base = { type, title }
+    if (type === 'video') return onSave({ ...base, url, duration })
+    if (type === 'reading') return onSave({ ...base, url, content })
+    if (type === 'checklist') return onSave({ ...base, items: items.filter((i) => i.trim()) })
+    if (type === 'quiz') return onSave({ ...base, questions, passingScore: Number(passingScore) })
+    if (type === 'task') return onSave({ ...base, instructions, requiresConfirmation })
+    if (type === 'document') return onSave({ ...base, description, acknowledgmentRequired })
+    if (type === 'meeting') return onSave({ ...base, with: meetingWith, durationMin: Number(durationMin), notes })
+  }
+
+  const getPlaceholder = () => {
+    const map = {
+      video: 'e.g. Food Safety Introduction Video',
+      reading: 'e.g. Employee Handbook',
+      checklist: 'e.g. Day 1 Setup Checklist',
+      quiz: 'e.g. Food Safety Knowledge Check',
+      task: 'e.g. Shadow Senior Chef for 1 Shift',
+      document: 'e.g. Kitchen Rules & Code of Conduct',
+      meeting: 'e.g. Welcome Meeting with Manager',
+    }
+    return map[type] || 'Title'
   }
 
   return (
@@ -34,17 +94,17 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
       {/* Type selector */}
       <div>
         <label className="label">Material Type</label>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {TYPES.map(({ type: t, icon: Icon, label, color }) => (
             <button
               key={t}
               type="button"
               onClick={() => setType(t)}
-              className={`flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium transition-all ${
+              className={`flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border text-xs font-medium transition-all ${
                 type === t ? color : 'border-gray-200 text-gray-500 hover:border-gray-300'
               }`}
             >
-              <Icon size={18} />
+              <Icon size={16} />
               {label}
             </button>
           ))}
@@ -56,26 +116,20 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
         <label className="label">Title *</label>
         <input
           className="input"
-          placeholder={
-            type === 'video'
-              ? 'e.g. Company Culture Introduction'
-              : type === 'checklist'
-              ? 'e.g. First Day Setup Checklist'
-              : 'e.g. Employee Handbook'
-          }
+          placeholder={getPlaceholder()}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
 
-      {/* Type-specific fields */}
+      {/* ── Video ─────────────────────────────────────────────────────────── */}
       {type === 'video' && (
         <>
           <div>
             <label className="label">Video URL</label>
             <input
               className="input"
-              placeholder="https://youtube.com/watch?v=... or Vimeo URL"
+              placeholder="https://youtube.com/watch?v=..."
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
@@ -92,6 +146,7 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
         </>
       )}
 
+      {/* ── Reading ───────────────────────────────────────────────────────── */}
       {type === 'reading' && (
         <>
           <div>
@@ -116,6 +171,7 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
         </>
       )}
 
+      {/* ── Checklist ─────────────────────────────────────────────────────── */}
       {type === 'checklist' && (
         <div>
           <label className="label">Checklist Items</label>
@@ -128,15 +184,10 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
                   placeholder={`Item ${idx + 1}`}
                   value={item}
                   onChange={(e) => updateItem(idx, e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') addItem()
-                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') addItem() }}
                 />
                 {items.length > 1 && (
-                  <button
-                    onClick={() => removeItem(idx)}
-                    className="text-gray-400 hover:text-red-500 p-1 rounded"
-                  >
+                  <button onClick={() => removeItem(idx)} className="text-gray-400 hover:text-red-500 p-1 rounded">
                     <X size={14} />
                   </button>
                 )}
@@ -153,10 +204,182 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
         </div>
       )}
 
+      {/* ── Quiz ──────────────────────────────────────────────────────────── */}
+      {type === 'quiz' && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <label className="label">Passing Score (%)</label>
+              <input
+                className="input"
+                type="number"
+                min={0}
+                max={100}
+                value={passingScore}
+                onChange={(e) => setPassingScore(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="label">Questions</label>
+            <div className="space-y-4">
+              {questions.map((q, qi) => (
+                <div key={qi} className="bg-gray-50 rounded-xl p-4 space-y-3">
+                  <div className="flex items-start gap-2">
+                    <span className="w-5 h-5 rounded-full bg-brand-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      {qi + 1}
+                    </span>
+                    <input
+                      className="input flex-1"
+                      placeholder="Enter your question..."
+                      value={q.question}
+                      onChange={(e) => updateQuestion(qi, 'question', e.target.value)}
+                    />
+                    {questions.length > 1 && (
+                      <button
+                        onClick={() => removeQuestion(qi)}
+                        className="text-gray-400 hover:text-red-500 p-1 rounded mt-0.5"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <div className="ml-7 space-y-2">
+                    {q.options.map((opt, oi) => (
+                      <div key={oi} className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => updateQuestion(qi, 'correct', oi)}
+                          className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition-colors ${
+                            q.correct === oi ? 'border-green-500 bg-green-500' : 'border-gray-300'
+                          }`}
+                        >
+                          {q.correct === oi && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </button>
+                        <input
+                          className="input text-sm"
+                          placeholder={`Option ${oi + 1}`}
+                          value={opt}
+                          onChange={(e) => updateOption(qi, oi, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                    <p className="text-xs text-gray-400">Click the circle to mark the correct answer</p>
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={addQuestion}
+                className="flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-700 font-medium"
+              >
+                <Plus size={14} />
+                Add question
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Task ──────────────────────────────────────────────────────────── */}
+      {type === 'task' && (
+        <>
+          <div>
+            <label className="label">Instructions</label>
+            <textarea
+              className="textarea"
+              rows={4}
+              placeholder="Describe exactly what the employee needs to do to complete this task..."
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setRequiresConfirmation(!requiresConfirmation)}
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                requiresConfirmation ? 'bg-brand-600 border-brand-600' : 'border-gray-300'
+              }`}
+            >
+              {requiresConfirmation && <Check size={12} className="text-white" />}
+            </button>
+            <label className="text-sm text-gray-700">
+              Requires supervisor confirmation to mark complete
+            </label>
+          </div>
+        </>
+      )}
+
+      {/* ── Document ──────────────────────────────────────────────────────── */}
+      {type === 'document' && (
+        <>
+          <div>
+            <label className="label">Description</label>
+            <textarea
+              className="textarea"
+              rows={3}
+              placeholder="Describe what this document contains and why the employee needs to read it..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setAcknowledgmentRequired(!acknowledgmentRequired)}
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                acknowledgmentRequired ? 'bg-brand-600 border-brand-600' : 'border-gray-300'
+              }`}
+            >
+              {acknowledgmentRequired && <Check size={12} className="text-white" />}
+            </button>
+            <label className="text-sm text-gray-700">
+              Employee must sign/acknowledge to complete
+            </label>
+          </div>
+        </>
+      )}
+
+      {/* ── Meeting ───────────────────────────────────────────────────────── */}
+      {type === 'meeting' && (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Meet with</label>
+              <input
+                className="input"
+                placeholder="e.g. Your Manager"
+                value={meetingWith}
+                onChange={(e) => setMeetingWith(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="label">Duration (minutes)</label>
+              <input
+                className="input"
+                type="number"
+                placeholder="e.g. 30"
+                value={durationMin}
+                onChange={(e) => setDurationMin(e.target.value)}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="label">Agenda / Notes</label>
+            <textarea
+              className="textarea"
+              rows={3}
+              placeholder="What should be discussed in this meeting?"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+        </>
+      )}
+
       <div className="flex gap-3 pt-2">
-        <button onClick={onCancel} className="btn-secondary flex-1">
-          Cancel
-        </button>
+        <button onClick={onCancel} className="btn-secondary flex-1">Cancel</button>
         <button
           onClick={handleSave}
           disabled={!title.trim()}

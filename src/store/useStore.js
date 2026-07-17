@@ -2,169 +2,196 @@ import { create } from 'zustand'
 
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
-// ─── Mock Data — User A: Stride Technologies (populated) ──────────────────────
+// ─── Mock Data — User A: Sunrise Bistro (Restaurant) ─────────────────────────
 const MOCK_COMPANY_A = {
-  name: 'Stride Technologies',
-  industry: 'Technology',
-  size: '51-200',
-  website: 'https://stridetechnologies.io',
-  description: 'Stride Technologies builds developer tools and productivity software for modern engineering teams. We are a remote-first company with a strong culture of ownership, transparency, and continuous learning.',
+  name: 'Sunrise Bistro',
+  industry: 'Food & Beverage',
+  size: '11-50',
+  website: 'https://sunrisebistro.co',
+  description: 'Sunrise Bistro is a full-service restaurant known for its warm hospitality and consistent food quality. We serve breakfast and lunch daily, and our team is the heart of everything we do.',
   logo: '',
-  primaryColor: '#4f5fff',
+  primaryColor: '#f59e0b',
   createdAt: '2026-01-01T00:00:00.000Z',
 }
 
 const MOCK_PROGRAMS_A = [
   {
     id: 'prog-001',
-    name: 'Software Engineer Onboarding',
-    description: 'A 30-day program to ramp up new software engineers — from company culture and values to shipping your first pull request to production.',
-    targetRole: 'Software Engineer',
-    estimatedDays: '30',
+    name: 'Kitchen Staff Onboarding',
+    description: 'A 7-day onboarding program for new kitchen staff — covering food safety, kitchen stations, equipment, and daily operating procedures.',
+    targetRole: 'Kitchen Staff',
+    estimatedDays: '7',
     status: 'published',
     createdAt: '2026-01-15T00:00:00.000Z',
     stages: [
       {
         id: 'stage-001',
-        name: 'Week 1: Culture & Orientation',
+        name: 'Day 1–2: Food Safety & Personal Hygiene',
         order: 1,
-        description: 'Get familiar with who we are, how we work, and the values that guide every decision at Stride.',
+        description: 'Before you touch any food, every kitchen staff member must understand our food safety standards. This protects our guests and our reputation.',
+        deadline: 2,
         materials: [
           {
             id: 'mat-001',
-            type: 'video',
-            title: 'Welcome to Stride Technologies',
-            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            duration: '8 min',
+            type: 'reading',
+            title: 'Food Safety & Hygiene Standards',
+            url: '',
+            content: `Welcome to Sunrise Bistro!
+
+Food safety is the foundation of everything we do. Please read the following standards carefully.
+
+Personal Hygiene Rules:
+• Always wash hands with soap for at least 20 seconds before handling food
+• Wear clean uniform, hair net, and non-slip shoes at all times
+• Do not work when sick — report illness to your supervisor immediately
+• Keep nails short and clean; no nail polish or jewelry allowed in the kitchen
+
+Temperature Rules:
+• Cold items must be stored below 4°C (40°F)
+• Hot foods must be held above 60°C (140°F)
+• Never leave perishable food at room temperature for more than 2 hours
+
+Cross-Contamination Prevention:
+• Use color-coded cutting boards (Red = raw meat, Green = vegetables, Yellow = poultry)
+• Never reuse utensils that touched raw meat without washing first
+• Store raw meats below ready-to-eat foods in the fridge
+
+If you ever have a question about food safety, ask your supervisor immediately — there are no silly questions when it comes to our guests' health.`,
           },
           {
             id: 'mat-002',
-            type: 'reading',
-            title: 'Employee Handbook',
-            url: 'https://notion.so/stride/handbook',
-            content: `Welcome to Stride Technologies!
-
-This handbook covers everything you need to know — from our core values and how we work, to leave policies and benefits.
-
-Our Core Values:
-• Ship with Confidence — move fast, but never at the cost of reliability
-• Own the Outcome — every engineer is accountable for what they ship
-• Communicate Openly — decisions, blockers, and feedback should be visible
-• Grow Relentlessly — learning is a job requirement, not a bonus
-
-Your first week is all about listening. Meet people, ask questions, and don't worry about contributing code yet. Relationships are the foundation everything else is built on.
-
-If you have questions, your buddy or manager is always available on Slack.`,
+            type: 'checklist',
+            title: 'Personal Hygiene & Uniform Checklist',
+            items: [
+              'Collect your uniform and non-slip kitchen shoes from management',
+              'Confirm your locker assignment and store personal items safely',
+              'Practice proper 20-second handwashing at the kitchen sink',
+              'Learn the location of all handwashing stations in the kitchen',
+              'Review the color-coded cutting board system with your supervisor',
+              'Sign the Food Safety Acknowledgment form',
+            ],
           },
           {
             id: 'mat-003',
-            type: 'checklist',
-            title: 'Day 1 Checklist',
-            items: [
-              'Set up your MacBook with IT using the setup guide in #onboarding',
-              'Activate your work email and sign in to Google Workspace',
-              'Join the Slack workspace and explore key channels',
-              'Introduce yourself in #general with a short bio',
-              'Schedule a 30-min intro call with your manager',
-              'Sign and return your NDA and employment contract',
+            type: 'quiz',
+            title: 'Food Safety Knowledge Check',
+            questions: [
+              {
+                question: 'At what temperature must cold food be stored to prevent bacterial growth?',
+                options: ['Below 10°C (50°F)', 'Below 4°C (40°F)', 'Below 0°C (32°F)', 'Below 15°C (59°F)'],
+                correct: 1,
+              },
+              {
+                question: 'Which color cutting board should you use for raw chicken?',
+                options: ['Green', 'Red', 'Yellow', 'Blue'],
+                correct: 2,
+              },
+              {
+                question: 'How long should you wash your hands with soap before handling food?',
+                options: ['5 seconds', '10 seconds', '20 seconds', '30 seconds'],
+                correct: 2,
+              },
+              {
+                question: 'What should you do if you feel sick before your shift?',
+                options: [
+                  'Come in and wear a mask',
+                  'Report to your supervisor and stay home',
+                  'Work your shift and take medicine',
+                  'Ask a colleague to cover and tell no one',
+                ],
+                correct: 1,
+              },
             ],
+            passingScore: 75,
           },
         ],
       },
       {
         id: 'stage-002',
-        name: 'Week 2: Tech Stack & Systems',
+        name: 'Day 3–5: Kitchen Stations & Equipment',
         order: 2,
-        description: 'Understand our architecture, tech stack, and engineering workflow so you can contribute with confidence.',
+        description: 'Get familiar with our kitchen layout, stations, and how to safely operate all equipment. Safety always comes before speed.',
+        deadline: 5,
         materials: [
           {
             id: 'mat-004',
             type: 'video',
-            title: 'System Architecture Overview',
+            title: 'Kitchen Station Tour — Sunrise Bistro',
             url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            duration: '22 min',
+            duration: '12 min',
           },
           {
             id: 'mat-005',
             type: 'reading',
-            title: 'Git Workflow & Contribution Guide',
-            url: 'https://github.com/stride/engineering/blob/main/CONTRIBUTING.md',
-            content: `Our Git Workflow
+            title: 'Equipment Safety & Operation Manual',
+            url: '',
+            content: `Kitchen Equipment Safety
 
-We follow trunk-based development with short-lived feature branches.
+At Sunrise Bistro, safety is never compromised for speed. Before using any equipment, ensure you have been trained and signed off by a senior staff member.
 
-Branch naming convention:
-  feat/short-description
-  fix/short-description
-  chore/short-description
+Stove & Oven:
+• Always check that burners are off before leaving the station
+• Use oven mitts — never use damp towels (steam burns)
+• Report any gas smell immediately to the Head Chef
 
-Commit message format:
-  feat: add user authentication endpoint
-  fix: resolve race condition in job queue
-  chore: upgrade Node.js to 20 LTS
+Fryer:
+• Never overfill the fryer basket — max 2/3 full
+• Lower the basket slowly to avoid splashing hot oil
+• Never leave the fryer unattended while heating
 
-Pull Request process:
-1. Open a draft PR early — this signals work in progress and invites early feedback
-2. Request review from at least 1 engineer when ready
-3. All CI checks must pass before merge (lint, tests, type check)
-4. We use squash merges to keep main history clean
+Slicer & Mandoline:
+• Always use the cut-resistant glove provided
+• Keep the safety guard in place at all times
+• Unplug before cleaning
 
-Code review turnaround target: within 1 business day.`,
+Fire Safety:
+• Know the location of the nearest fire extinguisher
+• For grease fires: NEVER use water — use the fire blanket or Class K extinguisher
+• In case of fire, alert all staff and evacuate before calling emergency services`,
           },
           {
             id: 'mat-006',
-            type: 'checklist',
-            title: 'Dev Environment Setup',
-            items: [
-              'Clone the main monorepo from GitHub',
-              'Run the bootstrap script (./scripts/setup.sh)',
-              'Verify all services start with docker-compose up',
-              'Confirm all unit and integration tests pass locally',
-              'Open a "hello world" PR to test the CI pipeline',
-            ],
+            type: 'task',
+            title: 'Shadow Head Chef for 1 Full Shift',
+            instructions: 'Spend an entire shift shadowing the Head Chef or a designated senior cook. Observe station setup, cooking techniques, plating standards, and how the team communicates during service. You do not need to cook — just observe, ask questions, and take mental notes. Your supervisor will confirm completion at the end of the shift.',
+            requiresConfirmation: true,
           },
         ],
       },
       {
         id: 'stage-003',
-        name: 'Weeks 3–4: Ship Your First Feature',
+        name: 'Day 6–7: Daily Operations & Sign-off',
         order: 3,
-        description: 'Pick up a real task from the backlog with guidance from your buddy and ship it to production.',
+        description: "You're almost ready! Complete the final procedures and official sign-off before your first independent shift.",
+        deadline: 7,
         materials: [
           {
             id: 'mat-007',
-            type: 'reading',
-            title: 'Code Review Best Practices',
-            url: '',
-            content: `How We Do Code Review
-
-Code review is one of the most important practices at Stride. It's how we share knowledge, maintain quality, and grow as engineers.
-
-As a reviewer:
-• Respond within 1 business day
-• Focus on logic and correctness — let the linter handle style
-• Ask questions, don't give orders: "What do you think about..." vs "You should..."
-• Acknowledge great work — positive feedback matters as much as corrections
-• If blocking, explain clearly why and suggest an alternative
-
-As an author:
-• Small PRs are easier to review and safer to ship — aim for <400 lines changed
-• Describe the "why" in your PR description, not just the "what"
-• Respond to every comment, even with just "done" or "acknowledged"
-
-The goal is to make each other better, not to gatekeep.`,
+            type: 'checklist',
+            title: 'Daily Opening Procedures',
+            items: [
+              'Check in with the Head Chef and receive your station assignment',
+              'Review the day\'s specials and any ingredient substitutions',
+              'Inspect your station: clean surfaces, correct equipment, stocked ingredients',
+              'Calibrate thermometers and confirm fridge temperatures are logged',
+              'Set up mise en place before service begins',
+              'Brief the team on any allergies or special dietary requests for the day',
+            ],
           },
           {
             id: 'mat-008',
-            type: 'checklist',
-            title: '30-Day Milestone Checklist',
-            items: [
-              'Complete and merge your first feature PR',
-              'Participate in sprint planning and estimation',
-              'Conduct at least 2 code reviews for teammates',
-              'Deploy a feature to the staging environment',
-              'Complete your 30-day check-in with your manager',
-            ],
+            type: 'document',
+            title: 'Kitchen Rules & Code of Conduct — Sign-off',
+            description: 'Please read the complete Kitchen Rules & Code of Conduct. Your signature confirms you understand and agree to follow all kitchen policies at Sunrise Bistro.',
+            acknowledgmentRequired: true,
+          },
+          {
+            id: 'mat-009',
+            type: 'meeting',
+            title: '30-Minute Check-in with Head Chef',
+            with: 'Head Chef',
+            durationMin: 30,
+            notes: 'At the end of your first week, have a 30-minute conversation with the Head Chef. Share what went well, what felt challenging, and any questions you have. This is your safe space to ask anything.',
           },
         ],
       },
@@ -172,102 +199,126 @@ The goal is to make each other better, not to gatekeep.`,
   },
   {
     id: 'prog-002',
-    name: 'Sales & Business Development Onboarding',
-    description: 'A 2-week intensive program for new Sales hires — covering product knowledge, our sales process, and how to close your first deal.',
-    targetRole: 'Sales Representative',
-    estimatedDays: '14',
+    name: 'Front of House Staff Onboarding',
+    description: 'A 5-day program for new waiters, cashiers, and host staff — covering service standards, menu knowledge, and POS system operation.',
+    targetRole: 'Waiter / Cashier',
+    estimatedDays: '5',
     status: 'published',
     createdAt: '2026-02-01T00:00:00.000Z',
     stages: [
       {
         id: 'stage-004',
-        name: 'Days 1–3: Product & Market',
+        name: 'Day 1–2: Hospitality Standards & Menu',
         order: 1,
-        description: "Deep-dive into Stride's products, our target market, and the problems we solve for customers.",
+        description: "Our guests choose Sunrise Bistro because of how we make them feel — not just the food. Learn our service standards and menu inside out.",
+        deadline: 2,
         materials: [
           {
-            id: 'mat-009',
-            type: 'video',
-            title: 'Product Demo — Full Feature Walkthrough',
-            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            duration: '35 min',
-          },
-          {
             id: 'mat-010',
-            type: 'reading',
-            title: 'Competitive Landscape & Positioning',
-            url: 'https://notion.so/stride/competitive-analysis',
-            content: `Competitive Positioning
-
-Our primary competitors and how we differentiate:
-
-1. Competitor A — Strong brand, but slow release cycle. We win on velocity and developer experience.
-2. Competitor B — Low price point, but limited integrations. We win on ecosystem depth and support quality.
-3. Competitor C — Enterprise-focused, very complex. We win on time-to-value and ease of setup.
-
-Core value proposition (use this in pitches):
-"Stride cuts engineering tool setup time by 70% and gives teams a single pane of glass for the entire developer workflow — without the enterprise complexity."
-
-Always ask before pitching: "What tools does your team currently use?" — this maps their pain to our solution.`,
+            type: 'video',
+            title: 'Welcome & Guest Service Standards',
+            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            duration: '15 min',
           },
           {
             id: 'mat-011',
+            type: 'reading',
+            title: 'Front of House Service Manual',
+            url: '',
+            content: `Sunrise Bistro — Service Standards
+
+Greeting Guests:
+• Every guest receives a smile and eye contact within 30 seconds of entering
+• Standard greeting: "Welcome to Sunrise Bistro! Table for how many?"
+• Seat guests promptly; if there is a wait, give an accurate estimate
+
+Taking Orders:
+• Always repeat the order back to the guest before leaving the table
+• Know the top 5 allergens in every dish (ask the kitchen if unsure)
+• If a guest has a special request, confirm with the kitchen before promising
+
+Food Delivery:
+• Announce each dish as you place it: "This is your Eggs Benedict — enjoy!"
+• Always check back within 2 minutes of delivering food
+• Offer refills proactively; never let a glass be empty
+
+Handling Complaints:
+• Never argue with a guest — listen fully before responding
+• Apologize sincerely, even if the issue was not your fault
+• Involve the manager for any complaint you cannot resolve yourself
+
+Our promise: every guest should leave feeling better than when they arrived.`,
+          },
+          {
+            id: 'mat-012',
             type: 'checklist',
-            title: 'Product Knowledge Sign-off',
+            title: 'Uniform & Appearance Standards',
             items: [
-              'Complete product demo certification (schedule with Sales Enablement)',
-              'Know Stride\'s top 3 value propositions by heart',
-              'Understand all pricing tiers and what each includes',
-              'Identify our 5 strongest differentiators vs. top competitors',
+              'Pick up your uniform set (2 shirts, 1 apron, name badge) from management',
+              'Confirm your name badge is spelled correctly',
+              'Wear black non-slip shoes — no sneakers or open-toed shoes',
+              'Hair must be tied back or neatly groomed for all front-of-house shifts',
+              'Practice the standard greeting with a colleague before your first shift',
+              'Learn the table numbering layout for your assigned section',
             ],
           },
         ],
       },
       {
         id: 'stage-005',
-        name: 'Days 4–7: Sales Process',
+        name: 'Day 3–5: POS System & Cash Handling',
         order: 2,
-        description: 'Learn our end-to-end sales methodology from prospecting to closing.',
+        description: 'Learn our point-of-sale system and cash handling procedures so every transaction is accurate and efficient.',
+        deadline: 5,
         materials: [
           {
-            id: 'mat-012',
-            type: 'reading',
-            title: 'Stride Sales Playbook',
-            url: '',
-            content: `Stride Sales Methodology — MEDDIC Framework
-
-M — Metrics: What is the quantifiable business impact for the customer?
-E — Economic Buyer: Have you identified the person who controls the budget?
-D — Decision Criteria: What criteria will they use to make a decision?
-D — Decision Process: What does their internal approval process look like?
-I — Identify Pain: What is the root problem driving them to look for a solution?
-C — Champion: Who inside the account is advocating for Stride?
-
-Pipeline stages and targets:
-• Discovery → Qualification rate: 50%
-• Qualified → Demo rate: 70%
-• Demo → Proposal rate: 40%
-• Proposal → Close rate: 30%
-
-Average deal size: $12,000 ARR. Sales cycle: 45 days.`,
-          },
-          {
             id: 'mat-013',
-            type: 'video',
-            title: 'Recorded Discovery Call — Analysis',
-            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            duration: '28 min',
+            type: 'reading',
+            title: 'POS System Quick Guide',
+            url: '',
+            content: `Sunrise Bistro POS — Quick Reference Guide
+
+Opening the System:
+1. Power on the terminal and log in with your staff PIN
+2. Select your name from the server list
+3. Check that the correct date and shift are shown
+
+Taking an Order:
+1. Select the table number from the floor plan view
+2. Tap menu items one by one — use modifiers for special requests (e.g., "No onion")
+3. Tap "Send to Kitchen" — order goes directly to the kitchen printer
+4. Keep the order ticket for reference
+
+Processing Payment:
+• Card: Tap "Pay" → "Card" → Follow terminal prompts — do NOT touch the card or terminal during transaction
+• Cash: Count cash in front of the guest → enter amount received → system shows change due → count change back aloud to guest
+• Split bills: Use the "Split" function — divide by number of guests or by item
+
+End-of-Shift:
+1. Tap "Close Shift" and print your sales summary
+2. Count your cash drawer against the printed summary
+3. Any discrepancy > Rp 5,000 must be reported to the manager immediately
+
+If you make a mistake, do not void without manager approval.`,
           },
           {
             id: 'mat-014',
+            type: 'task',
+            title: 'Supervised POS Practice Session',
+            instructions: 'Complete at least 3 practice transactions on the training POS terminal with your trainer present. Practice one cash payment, one card payment, and one split bill. Your trainer will sign you off when they are confident you can operate the POS independently.',
+            requiresConfirmation: true,
+          },
+          {
+            id: 'mat-015',
             type: 'checklist',
-            title: 'First Week Sales Activities',
+            title: 'End-of-Shift Cash Out Procedure',
             items: [
-              'Shadow 3 discovery calls with a senior AE',
-              'Complete MEDDIC certification quiz in LMS',
-              'Set up your HubSpot CRM account and review your territory',
-              'Draft your personal prospecting email template (review with manager)',
-              'Book your first 5 outbound calls for week 2',
+              'Print and review your shift sales summary from the POS',
+              'Count the physical cash in your drawer three times',
+              'Record the total in the cash log sheet',
+              'Report any discrepancy to the manager before leaving',
+              'Return your cash drawer and keys to the manager on duty',
+              'Log out of the POS system with your PIN',
             ],
           },
         ],
@@ -276,36 +327,55 @@ Average deal size: $12,000 ARR. Sales cycle: 45 days.`,
   },
   {
     id: 'prog-003',
-    name: 'Product Design Onboarding',
-    description: 'Get up to speed on our design system, product principles, and design-engineering collaboration workflow.',
-    targetRole: 'Product Designer',
-    estimatedDays: '21',
+    name: 'Restaurant Manager Orientation',
+    description: 'A 14-day orientation for new restaurant managers covering operations, team leadership, and financial reporting.',
+    targetRole: 'Restaurant Manager',
+    estimatedDays: '14',
     status: 'draft',
     createdAt: '2026-03-10T00:00:00.000Z',
     stages: [
       {
         id: 'stage-006',
-        name: 'Week 1: Design System & Tools',
+        name: 'Week 1: Operations & Leadership',
         order: 1,
-        description: 'Understand our component library, design tokens, and the tooling we use day-to-day.',
+        description: 'Understand how the restaurant runs day-to-day and how to lead your team effectively.',
+        deadline: 7,
         materials: [
           {
-            id: 'mat-015',
-            type: 'video',
-            title: 'Stride Design System — Getting Started',
-            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            duration: '18 min',
+            id: 'mat-016',
+            type: 'reading',
+            title: 'Manager Handbook — Operations Guide',
+            url: '',
+            content: `Sunrise Bistro — Manager Handbook
+
+As a manager, you are responsible for the experience of every guest and the wellbeing of every team member on your shift.
+
+Daily Opening Checklist (Manager):
+• Arrive 45 minutes before opening
+• Review reservations and any VIP or allergy notes
+• Brief the full team on the day's specials and any key updates
+• Confirm kitchen and FOH are stocked and stations are ready
+• Unlock the entrance and flip the open sign at the correct time
+
+During Service:
+• Walk the floor every 15 minutes — visit every table at least once
+• Monitor kitchen output speed — alert the Head Chef if tickets are stacking
+• Handle all escalated complaints promptly and with a solution mindset
+• Approve all voids and discounts in the POS
+
+Closing Responsibilities:
+• Confirm all guests have left before locking the front door
+• Review end-of-day cash reports and sign off on variances
+• Complete the manager log (incidents, issues, team feedback)
+• Set the alarm and secure the building`,
           },
           {
-            id: 'mat-016',
-            type: 'checklist',
-            title: 'Design Tools Setup',
-            items: [
-              'Accept your Figma organization invite',
-              'Explore the Stride Design System Figma file',
-              'Install required Figma plugins (listed in #design Slack channel)',
-              'Review the design token documentation in Notion',
-            ],
+            id: 'mat-017',
+            type: 'meeting',
+            title: 'Welcome Meeting with Area Manager',
+            with: 'Area Manager',
+            durationMin: 60,
+            notes: 'Schedule a 1-hour introductory meeting with your Area Manager in your first week. Agenda: your background and goals, 30/60/90 day expectations, reporting cadence, and any immediate priorities.',
           },
         ],
       },
@@ -316,71 +386,71 @@ Average deal size: $12,000 ARR. Sales cycle: 45 days.`,
 const MOCK_EMPLOYEES_A = [
   {
     id: 'emp-001',
-    name: 'Alex Rivera',
-    email: 'alex.rivera@stridetechnologies.io',
-    role: 'Software Engineer',
-    department: 'Engineering',
-    startDate: '2026-07-01',
+    name: 'Budi Hartono',
+    email: 'budi.hartono@sunrisebistro.co',
+    role: 'Kitchen Staff',
+    department: 'Kitchen',
+    startDate: '2026-07-07',
     status: 'active',
     avatar: '',
-    phone: '+1 (415) 555-0182',
-    location: 'San Francisco, CA',
+    phone: '+62 812-3456-7890',
+    location: 'Jakarta',
     assignedProgramId: 'prog-001',
-    completedMaterials: ['mat-001', 'mat-002', 'mat-003', 'mat-004', 'mat-005'],
+    completedMaterials: ['mat-001', 'mat-002', 'mat-003', 'mat-004', 'mat-005', 'mat-006'],
   },
   {
     id: 'emp-002',
-    name: 'Jordan Kim',
-    email: 'jordan.kim@stridetechnologies.io',
-    role: 'Sales Representative',
-    department: 'Sales',
-    startDate: '2026-07-08',
+    name: 'Sari Wulandari',
+    email: 'sari.wulandari@sunrisebistro.co',
+    role: 'Waiter',
+    department: 'Front of House',
+    startDate: '2026-07-10',
     status: 'active',
     avatar: '',
-    phone: '+1 (312) 555-0247',
-    location: 'Chicago, IL',
+    phone: '+62 857-9012-3456',
+    location: 'Jakarta',
     assignedProgramId: 'prog-002',
-    completedMaterials: ['mat-009', 'mat-010'],
+    completedMaterials: ['mat-010', 'mat-011'],
   },
   {
     id: 'emp-003',
-    name: 'Morgan Taylor',
-    email: 'morgan.taylor@stridetechnologies.io',
-    role: 'Software Engineer',
-    department: 'Engineering',
-    startDate: '2026-06-02',
+    name: 'Ahmad Fauzi',
+    email: 'ahmad.fauzi@sunrisebistro.co',
+    role: 'Cashier',
+    department: 'Front of House',
+    startDate: '2026-06-15',
     status: 'active',
     avatar: '',
-    phone: '+1 (206) 555-0391',
-    location: 'Seattle, WA',
-    assignedProgramId: 'prog-001',
-    completedMaterials: ['mat-001', 'mat-002', 'mat-003', 'mat-004', 'mat-005', 'mat-006', 'mat-007', 'mat-008'],
+    phone: '+62 821-4567-8901',
+    location: 'Jakarta',
+    assignedProgramId: 'prog-002',
+    completedMaterials: ['mat-010', 'mat-011', 'mat-012', 'mat-013', 'mat-014', 'mat-015'],
   },
   {
     id: 'emp-004',
-    name: 'Casey Nguyen',
-    email: 'casey.nguyen@stridetechnologies.io',
-    role: 'Product Designer',
-    department: 'Design',
-    startDate: '2026-07-14',
+    name: 'Rina Kurnia',
+    email: 'rina.kurnia@sunrisebistro.co',
+    role: 'Kitchen Staff',
+    department: 'Kitchen',
+    startDate: '2026-07-15',
     status: 'active',
     avatar: '',
-    phone: '+1 (646) 555-0128',
-    location: 'New York, NY',
-    assignedProgramId: null,
-    completedMaterials: [],
+    phone: '+62 878-2345-6789',
+    location: 'Jakarta',
+    assignedProgramId: 'prog-001',
+    completedMaterials: ['mat-001'],
   },
   {
     id: 'emp-005',
-    name: 'Riley Chen',
-    email: 'riley.chen@stridetechnologies.io',
-    role: 'Sales Representative',
-    department: 'Sales',
+    name: 'Doni Pratama',
+    email: 'doni.pratama@sunrisebistro.co',
+    role: 'Kitchen Staff',
+    department: 'Kitchen',
     startDate: '2026-07-16',
     status: 'active',
     avatar: '',
-    phone: '+1 (512) 555-0063',
-    location: 'Austin, TX',
+    phone: '+62 813-5678-9012',
+    location: 'Jakarta',
     assignedProgramId: null,
     completedMaterials: [],
   },
@@ -400,14 +470,14 @@ const MOCK_COMPANY_B = {
 
 // ─── Mock Users ──────────────────────────────────────────────────────────────
 export const MOCK_USERS = [
-  { id: 'user-stride', name: 'Alex Morgan', email: 'alex@stridetechnologies.io', password: 'demo123', role: 'admin', accountId: 'account-a' },
+  { id: 'user-bistro', name: 'Andi Saputra', email: 'andi@sunrisebistro.co', password: 'demo123', role: 'admin', accountId: 'account-a' },
   { id: 'user-bloom', name: 'Jamie Lee', email: 'jamie@bloom.studio', password: 'demo123', role: 'admin', accountId: 'account-b' },
   { id: 'user-owner', name: 'Owen Park', email: 'admin@onboard.app', password: 'admin123', role: 'owner', accountId: null },
 ]
 
 // ─── All Accounts (visible to owner panel) ───────────────────────────────────
 export const ALL_ACCOUNTS = [
-  { id: 'account-a', name: 'Stride Technologies', plan: 'Pro', owner: 'alex@stridetechnologies.io', employees: 5, programs: 3, status: 'active', joined: '2026-01-01', mrr: 49 },
+  { id: 'account-a', name: 'Sunrise Bistro', plan: 'Pro', owner: 'andi@sunrisebistro.co', employees: 5, programs: 3, status: 'active', joined: '2026-01-01', mrr: 49 },
   { id: 'account-b', name: 'Bloom Studio', plan: 'Free', owner: 'jamie@bloom.studio', employees: 0, programs: 0, status: 'trial', joined: '2026-02-15', mrr: 0 },
   { id: 'account-c', name: 'Meridian Health', plan: 'Pro', owner: 'ops@meridianhealth.com', employees: 12, programs: 4, status: 'active', joined: '2026-02-20', mrr: 49 },
   { id: 'account-d', name: 'Kite Logistics', plan: 'Team', owner: 'hr@kitelogistics.co', employees: 28, programs: 6, status: 'active', joined: '2026-03-05', mrr: 99 },
@@ -419,9 +489,9 @@ export const ALL_ACCOUNTS = [
 export const DEMO_ACCOUNTS = [
   {
     id: 'account-a',
-    label: 'Stride Technologies',
+    label: 'Sunrise Bistro',
     subtitle: '3 programs · 5 employees',
-    description: 'A fully configured account with onboarding programs and employees ready to explore.',
+    description: 'A restaurant with full onboarding programs for kitchen staff and front of house — ready to explore.',
     badge: 'Sample Data',
     company: MOCK_COMPANY_A,
     programs: MOCK_PROGRAMS_A,
@@ -539,7 +609,6 @@ const useStore = create((set, get) => ({
   deleteProgram: (id) =>
     set((s) => ({
       programs: s.programs.filter((p) => p.id !== id),
-      // unassign employees from deleted program
       employees: s.employees.map((e) =>
         e.assignedProgramId === id ? { ...e, assignedProgramId: null, completedMaterials: [] } : e
       ),
@@ -554,7 +623,7 @@ const useStore = create((set, get) => ({
           ...p,
           stages: [
             ...p.stages,
-            { id: generateId(), order: p.stages.length + 1, materials: [], ...stage },
+            { id: generateId(), order: p.stages.length + 1, materials: [], deadline: null, ...stage },
           ],
         }
       }),
@@ -678,7 +747,6 @@ const useStore = create((set, get) => ({
       ),
     })),
 
-  // used from employee self-service preview
   markMaterialComplete: (employeeId, materialId) =>
     set((s) => ({
       employees: s.employees.map((e) => {

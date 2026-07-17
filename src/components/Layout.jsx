@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   LogOut,
+  TrendingUp,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 
@@ -15,6 +16,7 @@ const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/programs', icon: BookOpen, label: 'Programs' },
   { to: '/employees', icon: Users, label: 'Employees' },
+  { to: '/performance', icon: TrendingUp, label: 'Performance' },
   { to: '/company', icon: Building2, label: 'Company Profile' },
 ]
 
