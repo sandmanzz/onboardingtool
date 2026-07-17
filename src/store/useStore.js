@@ -398,6 +398,23 @@ const MOCK_COMPANY_B = {
   createdAt: '2026-07-01T00:00:00.000Z',
 }
 
+// ─── Mock Users ──────────────────────────────────────────────────────────────
+export const MOCK_USERS = [
+  { id: 'user-stride', name: 'Alex Morgan', email: 'alex@stridetechnologies.io', password: 'demo123', role: 'admin', accountId: 'account-a' },
+  { id: 'user-bloom', name: 'Jamie Lee', email: 'jamie@bloom.studio', password: 'demo123', role: 'admin', accountId: 'account-b' },
+  { id: 'user-owner', name: 'Owen Park', email: 'admin@onboard.app', password: 'admin123', role: 'owner', accountId: null },
+]
+
+// ─── All Accounts (visible to owner panel) ───────────────────────────────────
+export const ALL_ACCOUNTS = [
+  { id: 'account-a', name: 'Stride Technologies', plan: 'Pro', owner: 'alex@stridetechnologies.io', employees: 5, programs: 3, status: 'active', joined: '2026-01-01', mrr: 49 },
+  { id: 'account-b', name: 'Bloom Studio', plan: 'Free', owner: 'jamie@bloom.studio', employees: 0, programs: 0, status: 'trial', joined: '2026-02-15', mrr: 0 },
+  { id: 'account-c', name: 'Meridian Health', plan: 'Pro', owner: 'ops@meridianhealth.com', employees: 12, programs: 4, status: 'active', joined: '2026-02-20', mrr: 49 },
+  { id: 'account-d', name: 'Kite Logistics', plan: 'Team', owner: 'hr@kitelogistics.co', employees: 28, programs: 6, status: 'active', joined: '2026-03-05', mrr: 99 },
+  { id: 'account-e', name: 'Nova Digital', plan: 'Free', owner: 'hello@novadigital.io', employees: 0, programs: 0, status: 'trial', joined: '2026-03-18', mrr: 0 },
+  { id: 'account-f', name: 'Plumb & Partners', plan: 'Team', owner: 'admin@plumbpartners.com', employees: 45, programs: 8, status: 'active', joined: '2026-03-22', mrr: 99 },
+]
+
 // ─── Available Accounts (for login screen) ───────────────────────────────────
 export const DEMO_ACCOUNTS = [
   {
@@ -428,12 +445,62 @@ const useStore = create((set, get) => ({
   programs: [],
   employees: [],
   isSetupComplete: false,
+  currentUser: null,
+  registeredUsers: [...MOCK_USERS],
 
-  // ── Auth / Account switching ─────────────────────────────────────────────
+  // ── Auth ─────────────────────────────────────────────────────────────────
+  login: (email, password) => {
+    const users = get().registeredUsers
+    const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase())
+    if (!user) return { success: false, error: 'No account found with this email.' }
+    if (user.password !== password) return { success: false, error: 'Incorrect password.' }
+    if (user.role === 'owner') {
+      set({ currentUser: user, isSetupComplete: true })
+    } else if (user.accountId) {
+      const account = DEMO_ACCOUNTS.find((a) => a.id === user.accountId)
+      if (account) {
+        set({ currentUser: user, company: account.company, programs: account.programs, employees: account.employees, isSetupComplete: true })
+      }
+    } else {
+      set({ currentUser: user, isSetupComplete: true })
+    }
+    return { success: true, user }
+  },
+
+  register: ({ name, email, password, companyName }) => {
+    const users = get().registeredUsers
+    if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) {
+      return { success: false, error: 'An account with this email already exists.' }
+    }
+    const newUser = { id: generateId(), name, email, password, role: 'admin', accountId: null }
+    const newCompany = {
+      name: companyName,
+      industry: '',
+      size: '',
+      website: '',
+      description: '',
+      logo: '',
+      primaryColor: '#4f5fff',
+      createdAt: new Date().toISOString(),
+    }
+    set((s) => ({
+      registeredUsers: [...s.registeredUsers, newUser],
+      currentUser: newUser,
+      company: newCompany,
+      programs: [],
+      employees: [],
+      isSetupComplete: true,
+    }))
+    return { success: true }
+  },
+
+  // ── Demo / Account switching ─────────────────────────────────────────────
   loginAs: (accountId) => {
     const account = DEMO_ACCOUNTS.find((a) => a.id === accountId)
     if (!account) return
+    const demoUser = MOCK_USERS.find((u) => u.accountId === accountId) || null
     set({
+      currentUser: demoUser,
       company: account.company,
       programs: account.programs,
       employees: account.employees,
@@ -441,7 +508,7 @@ const useStore = create((set, get) => ({
     })
   },
 
-  logout: () => set({ company: null, programs: [], employees: [], isSetupComplete: false }),
+  logout: () => set({ currentUser: null, company: null, programs: [], employees: [], isSetupComplete: false }),
 
   // ── Company ──────────────────────────────────────────────────────────────
   setCompany: (company) => set({ company, isSetupComplete: true }),
