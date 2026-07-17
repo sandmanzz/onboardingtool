@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus,
@@ -8,12 +9,17 @@ import {
   Eye,
   Clock,
   FileText,
+  Copy,
+  BarChart3,
 } from 'lucide-react'
 import useStore from '../store/useStore'
+import IconButton from '../components/IconButton'
+import InsightsDrawer from '../components/InsightsDrawer'
 
 export default function Programs() {
   const navigate = useNavigate()
-  const { programs, deleteProgram } = useStore()
+  const { programs, deleteProgram, duplicateProgram } = useStore()
+  const [insightsProgramId, setInsightsProgramId] = useState(null)
 
   return (
     <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto">
@@ -67,9 +73,17 @@ export default function Programs() {
             return (
               <div key={program.id} className="card p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-start gap-4">
-                  <div className="w-11 h-11 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
-                    <BookOpen size={20} className="text-brand-600" />
-                  </div>
+                  {program.headerImage ? (
+                    <img
+                      src={program.headerImage}
+                      alt=""
+                      className="w-11 h-11 rounded-xl object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="w-11 h-11 rounded-xl bg-brand-50 flex items-center justify-center shrink-0">
+                      <BookOpen size={20} className="text-brand-600" />
+                    </div>
+                  )}
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -113,29 +127,42 @@ export default function Programs() {
                   </div>
 
                   <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => navigate(`/programs/${program.id}/preview`)}
-                      className="hidden sm:flex btn-ghost p-2"
-                      title="Preview"
-                    >
-                      <Eye size={17} />
-                    </button>
-                    <button
+                    <div className="hidden sm:block">
+                      <IconButton
+                        icon={BarChart3}
+                        label="Insights"
+                        onClick={() => setInsightsProgramId(program.id)}
+                        className="btn-ghost p-2"
+                      />
+                    </div>
+                    <div className="hidden sm:block">
+                      <IconButton
+                        icon={Eye}
+                        label="Preview"
+                        onClick={() => navigate(`/programs/${program.id}/preview`)}
+                        className="btn-ghost p-2"
+                      />
+                    </div>
+                    <IconButton
+                      icon={Edit3}
+                      label="Edit"
                       onClick={() => navigate(`/programs/${program.id}`)}
                       className="btn-ghost p-2"
-                      title="Edit"
-                    >
-                      <Edit3 size={17} />
-                    </button>
-                    <button
+                    />
+                    <IconButton
+                      icon={Copy}
+                      label="Duplicate"
+                      onClick={() => duplicateProgram(program.id)}
+                      className="btn-ghost p-2"
+                    />
+                    <IconButton
+                      icon={Trash2}
+                      label="Delete"
                       onClick={() => {
                         if (confirm('Delete this program?')) deleteProgram(program.id)
                       }}
                       className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 size={17} />
-                    </button>
+                    />
                   </div>
                 </div>
               </div>
@@ -143,6 +170,8 @@ export default function Programs() {
           })}
         </div>
       )}
+
+      <InsightsDrawer programId={insightsProgramId} onClose={() => setInsightsProgramId(null)} />
     </div>
   )
 }

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import {
   Video, ListChecks, FileText, Plus, X, Check,
-  ClipboardList, Wrench, FileSignature, Calendar,
+  ClipboardList, Wrench, FileSignature, Calendar, Camera, Upload, Paperclip,
 } from 'lucide-react'
+import RichTextEditor from './RichTextEditor'
 
 const TYPES = [
   { type: 'video', icon: Video, label: 'Video', color: 'text-purple-600 bg-purple-50 border-purple-200' },
@@ -25,8 +26,12 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
   const [content, setContent] = useState(initial?.content || '')
   const [duration, setDuration] = useState(initial?.duration || '')
 
-  // checklist
-  const [items, setItems] = useState(initial?.items?.length ? initial.items : [''])
+  // checklist — normalize legacy string items into { text, photoRequired } objects
+  const normalizeItems = (raw) =>
+    raw.map((it) => (typeof it === 'string' ? { text: it, photoRequired: false } : it))
+  const [items, setItems] = useState(
+    initial?.items?.length ? normalizeItems(initial.items) : [{ text: '', photoRequired: false }]
+  )
 
   // quiz
   const [questions, setQuestions] = useState(
@@ -41,6 +46,8 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
   // document
   const [description, setDescription] = useState(initial?.description || '')
   const [acknowledgmentRequired, setAcknowledgmentRequired] = useState(initial?.acknowledgmentRequired ?? true)
+  const [fileUrl, setFileUrl] = useState(initial?.fileUrl || '')
+  const [fileName, setFileName] = useState(initial?.fileName || '')
 
   // meeting
   const [meetingWith, setMeetingWith] = useState(initial?.with || '')
@@ -48,9 +55,24 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
   const [notes, setNotes] = useState(initial?.notes || '')
 
   // ── Checklist helpers ────────────────────────────────────────────────────
-  const addItem = () => setItems((i) => [...i, ''])
+  const addItem = () => setItems((i) => [...i, { text: '', photoRequired: false }])
   const removeItem = (idx) => setItems((i) => i.filter((_, j) => j !== idx))
-  const updateItem = (idx, val) => setItems((i) => i.map((x, j) => (j === idx ? val : x)))
+  const updateItem = (idx, val) =>
+    setItems((i) => i.map((x, j) => (j === idx ? { ...x, text: val } : x)))
+  const togglePhotoRequired = (idx) =>
+    setItems((i) => i.map((x, j) => (j === idx ? { ...x, photoRequired: !x.photoRequired } : x)))
+
+  // ── Document helpers ─────────────────────────────────────────────────────
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      setFileUrl(ev.target.result)
+      setFileName(file.name)
+    }
+    reader.readAsDataURL(file)
+  }
 
   // ── Quiz helpers ─────────────────────────────────────────────────────────
   const addQuestion = () => setQuestions((q) => [...q, EMPTY_QUESTION()])
@@ -69,10 +91,10 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
     const base = { type, title }
     if (type === 'video') return onSave({ ...base, url, duration })
     if (type === 'reading') return onSave({ ...base, url, content })
-    if (type === 'checklist') return onSave({ ...base, items: items.filter((i) => i.trim()) })
+    if (type === 'checklist') return onSave({ ...base, items: items.filter((i) => i.text.trim()) })
     if (type === 'quiz') return onSave({ ...base, questions, passingScore: Number(passingScore) })
     if (type === 'task') return onSave({ ...base, instructions, requiresConfirmation })
-    if (type === 'document') return onSave({ ...base, description, acknowledgmentRequired })
+    if (type === 'document') return onSave({ ...base, description, acknowledgmentRequired, fileUrl, fileName })
     if (type === 'meeting') return onSave({ ...base, with: meetingWith, durationMin: Number(durationMin), notes })
   }
 
@@ -160,12 +182,11 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
           </div>
           <div>
             <label className="label">Content / Summary</label>
-            <textarea
-              className="textarea"
-              rows={4}
-              placeholder="Write the content here or paste a summary..."
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={setContent}
+              placeholder="Write the content here or paste a summary..."
+              minRows={4}
             />
           </div>
         </>
@@ -182,10 +203,20 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
                 <input
                   className="input"
                   placeholder={`Item ${idx + 1}`}
-                  value={item}
+                  value={item.text}
                   onChange={(e) => updateItem(idx, e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') addItem() }}
                 />
+                <button
+                  type="button"
+                  title={item.photoRequired ? 'Photo required — click to disable' : 'Require a photo to complete this item'}
+                  onClick={() => togglePhotoRequired(idx)}
+                  className={`p-1.5 rounded shrink-0 transition-colors ${
+                    item.photoRequired ? 'bg-brand-100 text-brand-700' : 'text-gray-300 hover:text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  <Camera size={14} />
+                </button>
                 {items.length > 1 && (
                   <button onClick={() => removeItem(idx)} className="text-gray-400 hover:text-red-500 p-1 rounded">
                     <X size={14} />
@@ -200,6 +231,10 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
               <Plus size={14} />
               Add item
             </button>
+            <p className="text-xs text-gray-400 flex items-center gap-1.5">
+              <Camera size={12} />
+              Click the camera icon on an item to require a photo before it can be checked off
+            </p>
           </div>
         </div>
       )}
@@ -286,12 +321,11 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
         <>
           <div>
             <label className="label">Instructions</label>
-            <textarea
-              className="textarea"
-              rows={4}
-              placeholder="Describe exactly what the employee needs to do to complete this task..."
+            <RichTextEditor
               value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
+              onChange={setInstructions}
+              placeholder="Describe exactly what the employee needs to do to complete this task..."
+              minRows={4}
             />
           </div>
           <div className="flex items-center gap-3">
@@ -316,13 +350,34 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
         <>
           <div>
             <label className="label">Description</label>
-            <textarea
-              className="textarea"
-              rows={3}
-              placeholder="Describe what this document contains and why the employee needs to read it..."
+            <RichTextEditor
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={setDescription}
+              placeholder="Describe what this document contains and why the employee needs to read it..."
+              minRows={3}
             />
+          </div>
+          <div>
+            <label className="label">Attach File (optional)</label>
+            {fileName ? (
+              <div className="flex items-center gap-2 p-2.5 rounded-lg border border-gray-200 bg-gray-50">
+                <Paperclip size={14} className="text-gray-400 shrink-0" />
+                <span className="text-sm text-gray-700 truncate flex-1">{fileName}</span>
+                <button
+                  type="button"
+                  onClick={() => { setFileUrl(''); setFileName('') }}
+                  className="text-gray-400 hover:text-red-500 p-1 rounded"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label className="flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed border-gray-200 hover:border-brand-400 hover:bg-brand-50/30 cursor-pointer text-sm text-gray-500 transition-all">
+                <Upload size={14} />
+                Upload a document (PDF, DOCX, image...)
+                <input type="file" className="hidden" onChange={handleFileChange} />
+              </label>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -367,12 +422,11 @@ export default function MaterialEditor({ initial, defaultType, onSave, onCancel 
           </div>
           <div>
             <label className="label">Agenda / Notes</label>
-            <textarea
-              className="textarea"
-              rows={3}
-              placeholder="What should be discussed in this meeting?"
+            <RichTextEditor
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={setNotes}
+              placeholder="What should be discussed in this meeting?"
+              minRows={3}
             />
           </div>
         </>

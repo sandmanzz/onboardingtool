@@ -11,6 +11,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import useStore from '../store/useStore'
+import Toast from './Toast'
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -127,6 +128,7 @@ export default function Layout() {
 
         <main className="flex-1 overflow-y-auto"><Outlet /></main>
       </div>
+      <Toast />
     </div>
   )
 }

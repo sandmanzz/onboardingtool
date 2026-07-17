@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
@@ -12,6 +13,7 @@ const MOCK_COMPANY_A = {
   logo: '',
   primaryColor: '#f59e0b',
   createdAt: '2026-01-01T00:00:00.000Z',
+  departments: ['Kitchen', 'Front of House', 'Management', 'Bar', 'Cashier', 'Delivery'],
 }
 
 const MOCK_PROGRAMS_A = [
@@ -392,9 +394,12 @@ const MOCK_EMPLOYEES_A = [
     department: 'Kitchen',
     startDate: '2026-07-07',
     status: 'active',
-    avatar: '',
+    employmentType: 'Full-time',
+    manager: 'Andi Saputra',
     phone: '+62 812-3456-7890',
     location: 'Jakarta',
+    notes: 'Strong learner. Has prior kitchen experience at Warung Pak Haji. Handles pressure well.',
+    avatar: '',
     assignedProgramId: 'prog-001',
     completedMaterials: ['mat-001', 'mat-002', 'mat-003', 'mat-004', 'mat-005', 'mat-006'],
   },
@@ -406,9 +411,12 @@ const MOCK_EMPLOYEES_A = [
     department: 'Front of House',
     startDate: '2026-07-10',
     status: 'active',
-    avatar: '',
+    employmentType: 'Full-time',
+    manager: 'Andi Saputra',
     phone: '+62 857-9012-3456',
     location: 'Jakarta',
+    notes: 'Needs extra support with POS system. Good customer-facing skills. Check in by end of week 2.',
+    avatar: '',
     assignedProgramId: 'prog-002',
     completedMaterials: ['mat-010', 'mat-011'],
   },
@@ -420,9 +428,12 @@ const MOCK_EMPLOYEES_A = [
     department: 'Front of House',
     startDate: '2026-06-15',
     status: 'active',
-    avatar: '',
+    employmentType: 'Full-time',
+    manager: 'Andi Saputra',
     phone: '+62 821-4567-8901',
     location: 'Jakarta',
+    notes: 'Completed onboarding ahead of schedule. Recommend for cashier team lead role.',
+    avatar: '',
     assignedProgramId: 'prog-002',
     completedMaterials: ['mat-010', 'mat-011', 'mat-012', 'mat-013', 'mat-014', 'mat-015'],
   },
@@ -434,9 +445,12 @@ const MOCK_EMPLOYEES_A = [
     department: 'Kitchen',
     startDate: '2026-07-15',
     status: 'active',
-    avatar: '',
+    employmentType: 'Probation',
+    manager: 'Budi Hartono',
     phone: '+62 878-2345-6789',
     location: 'Jakarta',
+    notes: 'First week. Monitor closely. Probation ends 2026-08-15.',
+    avatar: '',
     assignedProgramId: 'prog-001',
     completedMaterials: ['mat-001'],
   },
@@ -448,9 +462,12 @@ const MOCK_EMPLOYEES_A = [
     department: 'Kitchen',
     startDate: '2026-07-16',
     status: 'active',
-    avatar: '',
+    employmentType: 'Part-time',
+    manager: 'Budi Hartono',
     phone: '+62 813-5678-9012',
     location: 'Jakarta',
+    notes: 'Available Mon–Fri only. No prior restaurant experience.',
+    avatar: '',
     assignedProgramId: null,
     completedMaterials: [],
   },
@@ -510,7 +527,7 @@ export const DEMO_ACCOUNTS = [
 ]
 
 // ─── Store ────────────────────────────────────────────────────────────────────
-const useStore = create((set, get) => ({
+const useStore = create(persist((set, get) => ({
   company: null,
   programs: [],
   employees: [],
@@ -585,6 +602,31 @@ const useStore = create((set, get) => ({
 
   updateCompany: (updates) =>
     set((s) => ({ company: { ...s.company, ...updates } })),
+
+  addDepartment: (name) =>
+    set((s) => ({
+      company: {
+        ...s.company,
+        departments: [...(s.company.departments || []), name],
+      },
+    })),
+
+  renameDepartment: (oldName, newName) =>
+    set((s) => ({
+      company: {
+        ...s.company,
+        departments: (s.company.departments || []).map((d) => (d === oldName ? newName : d)),
+      },
+      employees: s.employees.map((e) => (e.department === oldName ? { ...e, department: newName } : e)),
+    })),
+
+  deleteDepartment: (name) =>
+    set((s) => ({
+      company: {
+        ...s.company,
+        departments: (s.company.departments || []).filter((d) => d !== name),
+      },
+    })),
 
   // ── Programs ─────────────────────────────────────────────────────────────
   addProgram: (program) =>
@@ -755,6 +797,38 @@ const useStore = create((set, get) => ({
         return { ...e, completedMaterials: [...e.completedMaterials, materialId] }
       }),
     })),
-}))
+
+  duplicateProgram: (id) =>
+    set((s) => {
+      const program = s.programs.find((p) => p.id === id)
+      if (!program) return {}
+      const clone = {
+        ...program,
+        id: generateId(),
+        name: `${program.name} (Copy)`,
+        status: 'draft',
+        shareToken: null,
+        createdAt: new Date().toISOString(),
+        stages: program.stages.map((stage) => ({
+          ...stage,
+          id: generateId(),
+          materials: stage.materials.map((m) => ({ ...m, id: generateId() })),
+        })),
+      }
+      return { programs: [...s.programs, clone] }
+    }),
+
+  enableShare: (programId) =>
+    set((s) => ({
+      programs: s.programs.map((p) =>
+        p.id === programId ? { ...p, shareToken: p.shareToken || generateId() } : p
+      ),
+    })),
+
+  disableShare: (programId) =>
+    set((s) => ({
+      programs: s.programs.map((p) => (p.id === programId ? { ...p, shareToken: null } : p)),
+    })),
+}), { name: 'onboarding-store' }))
 
 export default useStore

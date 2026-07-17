@@ -4,9 +4,13 @@ import {
   ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, Video,
   ListChecks, FileText, Save, Eye, Edit2,
   Check, X, ChevronRight, ClipboardList, Wrench, FileSignature, Calendar, Clock,
+  Image, BarChart3, Link2, Copy,
 } from 'lucide-react'
 import useStore from '../store/useStore'
+import useToastStore from '../store/useToastStore'
 import MaterialEditor from '../components/MaterialEditor'
+import RichTextEditor from '../components/RichTextEditor'
+import InsightsDrawer from '../components/InsightsDrawer'
 
 const MATERIAL_TYPES = [
   { type: 'video', icon: Video, label: 'Video', color: 'text-purple-600 bg-purple-50' },
@@ -22,7 +26,8 @@ export default function ProgramEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { programs, addProgram, updateProgram, addStage, updateStage, deleteStage,
-    addMaterial, updateMaterial, deleteMaterial } = useStore()
+    addMaterial, updateMaterial, deleteMaterial, enableShare, disableShare } = useStore()
+  const showToast = useToastStore((s) => s.showToast)
 
   const isNew = id === 'new'
   const program = isNew ? null : programs.find((p) => p.id === id)
@@ -33,15 +38,17 @@ export default function ProgramEditor() {
     targetRole: program?.targetRole || '',
     estimatedDays: program?.estimatedDays || '',
     status: program?.status || 'draft',
+    headerImage: program?.headerImage || '',
   })
-  const [saved, setSaved] = useState(false)
-  const [activeProgramId, setActiveProgramId] = useState(isNew ? null : id)
+  const [linkCopied, setLinkCopied] = useState(false)
+  const activeProgramId = isNew ? null : id
   const [expandedStage, setExpandedStage] = useState(null)
   const [editingStage, setEditingStage] = useState(null)
   const [addingMaterial, setAddingMaterial] = useState(null)
   const [editingMaterial, setEditingMaterial] = useState(null)
   const [newStageName, setNewStageName] = useState('')
   const [showAddStage, setShowAddStage] = useState(false)
+  const [showInsights, setShowInsights] = useState(false)
 
   const currentProgram = activeProgramId
     ? programs.find((p) => p.id === activeProgramId)
@@ -51,14 +58,11 @@ export default function ProgramEditor() {
     if (!form.name.trim()) return
     if (isNew && !activeProgramId) {
       addProgram(form)
-      const newId = useStore.getState().programs.slice(-1)[0]?.id
-      setActiveProgramId(newId)
-      navigate(`/programs/${newId}`, { replace: true })
     } else {
       updateProgram(activeProgramId || id, form)
     }
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    showToast('Program saved')
+    navigate('/dashboard')
   }
 
   const handleAddStage = () => {
@@ -68,6 +72,30 @@ export default function ProgramEditor() {
     setShowAddStage(false)
     const prog = useStore.getState().programs.find((p) => p.id === activeProgramId)
     if (prog) setExpandedStage(prog.stages.slice(-1)[0]?.id)
+  }
+
+  const handleHeaderImageChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => setForm((f) => ({ ...f, headerImage: ev.target.result }))
+    reader.readAsDataURL(file)
+  }
+
+  const handleToggleShare = () => {
+    if (!activeProgramId) return
+    if (currentProgram?.shareToken) disableShare(activeProgramId)
+    else enableShare(activeProgramId)
+  }
+
+  const shareUrl = currentProgram?.shareToken
+    ? `${window.location.origin}/share/${currentProgram.shareToken}`
+    : ''
+
+  const handleCopyShareUrl = () => {
+    navigator.clipboard.writeText(shareUrl)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
   }
 
   const moveStage = (stageId, dir) => {
@@ -84,7 +112,7 @@ export default function ProgramEditor() {
     <div className="px-4 sm:px-6 py-6 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/programs')} className="btn-ghost p-2">
+        <button onClick={() => navigate(-1)} className="btn-ghost p-2">
           <ArrowLeft size={18} />
         </button>
         <div className="flex-1">
@@ -94,13 +122,22 @@ export default function ProgramEditor() {
           <p className="text-sm text-gray-500">Build your onboarding journey</p>
         </div>
         {activeProgramId && (
-          <button
-            onClick={() => navigate(`/programs/${activeProgramId}/preview`)}
-            className="btn-secondary flex items-center gap-2"
-          >
-            <Eye size={16} />
-            Preview
-          </button>
+          <>
+            <button
+              onClick={() => setShowInsights(true)}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <BarChart3 size={16} />
+              Insights
+            </button>
+            <button
+              onClick={() => navigate(`/programs/${activeProgramId}/preview`)}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <Eye size={16} />
+              Preview
+            </button>
+          </>
         )}
       </div>
 
@@ -108,6 +145,27 @@ export default function ProgramEditor() {
       <div className="card p-6 mb-5">
         <h2 className="text-base font-semibold text-gray-900 mb-4">Program Details</h2>
         <div className="space-y-4">
+          <div>
+            <label className="label">Header Image (optional)</label>
+            {form.headerImage ? (
+              <div className="relative rounded-xl overflow-hidden border border-gray-200 mb-1">
+                <img src={form.headerImage} alt="" className="w-full h-32 object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, headerImage: '' }))}
+                  className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label className="flex items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-brand-400 hover:bg-brand-50/30 cursor-pointer text-sm text-gray-500 transition-all">
+                <Image size={16} />
+                Upload a banner image shown at the top of this program
+                <input type="file" accept="image/*" className="hidden" onChange={handleHeaderImageChange} />
+              </label>
+            )}
+          </div>
           <div>
             <label className="label">Program Name *</label>
             <input
@@ -119,12 +177,11 @@ export default function ProgramEditor() {
           </div>
           <div>
             <label className="label">Introduction / Description</label>
-            <textarea
-              className="textarea"
-              rows={2}
-              placeholder="What will employees learn and accomplish in this program?"
+            <RichTextEditor
               value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              onChange={(val) => setForm((f) => ({ ...f, description: val }))}
+              placeholder="What will employees learn and accomplish in this program?"
+              minRows={2}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -174,13 +231,52 @@ export default function ProgramEditor() {
           <button
             onClick={handleSaveInfo}
             disabled={!form.name.trim()}
-            className={`btn-primary flex items-center gap-2 ${saved ? 'bg-green-600 hover:bg-green-600' : ''}`}
+            className="btn-primary flex items-center gap-2"
           >
-            {saved ? <Check size={16} /> : <Save size={16} />}
-            {saved ? 'Saved!' : isNew && !activeProgramId ? 'Create Program' : 'Save Changes'}
+            <Save size={16} />
+            {isNew && !activeProgramId ? 'Create Program' : 'Save Changes'}
           </button>
         </div>
       </div>
+
+      {/* Public share link */}
+      {activeProgramId && (
+        <div className="card p-6 mb-5">
+          <div className="flex items-center justify-between gap-3 mb-1">
+            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <Link2 size={16} className="text-gray-400" />
+              Public Link
+            </h2>
+            <button
+              type="button"
+              onClick={handleToggleShare}
+              className={`relative w-10 h-5.5 rounded-full transition-colors shrink-0 ${
+                currentProgram?.shareToken ? 'bg-brand-600' : 'bg-gray-200'
+              }`}
+              style={{ height: '22px', width: '40px' }}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-4.5 h-4.5 rounded-full bg-white shadow transition-transform ${
+                  currentProgram?.shareToken ? 'translate-x-[18px]' : ''
+                }`}
+                style={{ height: '18px', width: '18px' }}
+              />
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mb-3">
+            Share a read-only overview dashboard for this program — no employee names or personal data included.
+          </p>
+          {currentProgram?.shareToken && (
+            <div className="flex items-center gap-2">
+              <input className="input flex-1 text-xs" readOnly value={shareUrl} onClick={(e) => e.target.select()} />
+              <button onClick={handleCopyShareUrl} className="btn-secondary shrink-0 flex items-center gap-1.5 px-3">
+                <Copy size={14} />
+                {linkCopied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Stages */}
       {activeProgramId && (
@@ -278,14 +374,11 @@ export default function ProgramEditor() {
                       <div className="pt-3 mb-4 space-y-3">
                         <div>
                           <label className="label">Stage Introduction (shown to employees)</label>
-                          <textarea
-                            className="textarea"
-                            rows={2}
-                            placeholder="Welcome text or instructions shown at the top of this stage..."
+                          <RichTextEditor
                             value={stage.description || ''}
-                            onChange={(e) =>
-                              updateStage(activeProgramId, stage.id, { description: e.target.value })
-                            }
+                            onChange={(val) => updateStage(activeProgramId, stage.id, { description: val })}
+                            placeholder="Welcome text or instructions shown at the top of this stage..."
+                            minRows={2}
                           />
                         </div>
                         <div className="flex items-center gap-3">
@@ -449,6 +542,11 @@ export default function ProgramEditor() {
           </div>
         </div>
       )}
+
+      <InsightsDrawer
+        programId={showInsights ? activeProgramId : null}
+        onClose={() => setShowInsights(false)}
+      />
     </div>
   )
 }

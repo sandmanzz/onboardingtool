@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, ArrowRight, Check, Video, ListChecks, FileText,
-  ExternalLink, CheckSquare, Square, Play, Clock, BookOpen
+  ExternalLink, CheckSquare, Square, Play, Clock, BookOpen,
+  ClipboardList, Wrench, FileSignature, Calendar, Camera, X, Paperclip, Download,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 
@@ -71,40 +72,78 @@ function VideoMaterial({ material, onComplete, completed }) {
 
 function ChecklistMaterial({ material, onComplete, completed }) {
   const [checked, setChecked] = useState({})
-  const items = material.items || []
+  const [photos, setPhotos] = useState({})
+  const [pendingPhotoIdx, setPendingPhotoIdx] = useState(null)
+  const items = (material.items || []).map((it) =>
+    typeof it === 'string' ? { text: it, photoRequired: false } : it
+  )
   const allChecked = items.length > 0 && items.every((_, i) => checked[i])
 
-  const toggle = (idx) => {
-    const next = { ...checked, [idx]: !checked[idx] }
+  const check = (idx) => {
+    const next = { ...checked, [idx]: true }
     setChecked(next)
     if (items.every((_, i) => next[i])) onComplete()
+  }
+
+  const toggle = (idx) => {
+    if (checked[idx]) {
+      setChecked((c) => ({ ...c, [idx]: false }))
+      return
+    }
+    if (items[idx].photoRequired && !photos[idx]) {
+      setPendingPhotoIdx(idx)
+      return
+    }
+    check(idx)
+  }
+
+  const handlePhotoCapture = (e) => {
+    const file = e.target.files[0]
+    const idx = pendingPhotoIdx
+    setPendingPhotoIdx(null)
+    if (!file || idx === null) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      setPhotos((p) => ({ ...p, [idx]: ev.target.result }))
+      check(idx)
+    }
+    reader.readAsDataURL(file)
   }
 
   return (
     <div className="space-y-2">
       {items.map((item, idx) => (
-        <button
+        <div
           key={idx}
-          onClick={() => toggle(idx)}
           className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${
             checked[idx]
               ? 'bg-green-50 border-green-200'
               : 'bg-gray-50 border-gray-100 hover:bg-white hover:border-gray-200'
           }`}
         >
-          {checked[idx] ? (
-            <CheckSquare size={20} className="text-green-600 shrink-0" />
-          ) : (
-            <Square size={20} className="text-gray-400 shrink-0" />
+          <button onClick={() => toggle(idx)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+            {checked[idx] ? (
+              <CheckSquare size={20} className="text-green-600 shrink-0" />
+            ) : (
+              <Square size={20} className="text-gray-400 shrink-0" />
+            )}
+            <span
+              className={`text-sm font-medium ${
+                checked[idx] ? 'line-through text-gray-400' : 'text-gray-700'
+              }`}
+            >
+              {item.text}
+            </span>
+            {item.photoRequired && !checked[idx] && (
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full shrink-0">
+                <Camera size={10} /> Photo required
+              </span>
+            )}
+          </button>
+          {photos[idx] && (
+            <img src={photos[idx]} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
           )}
-          <span
-            className={`text-sm font-medium ${
-              checked[idx] ? 'line-through text-gray-400' : 'text-gray-700'
-            }`}
-          >
-            {item}
-          </span>
-        </button>
+        </div>
       ))}
       {allChecked && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-green-100 text-green-700 text-sm font-medium">
@@ -112,6 +151,233 @@ function ChecklistMaterial({ material, onComplete, completed }) {
           All tasks completed!
         </div>
       )}
+
+      {pendingPhotoIdx !== null && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <Camera size={16} /> Photo Required
+              </h3>
+              <button onClick={() => setPendingPhotoIdx(null)} className="btn-ghost p-1.5">
+                <X size={16} />
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              Take or upload a photo to confirm "{items[pendingPhotoIdx]?.text}" is done.
+            </p>
+            <label className="flex items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-brand-400 hover:bg-brand-50/30 cursor-pointer text-sm text-gray-600 transition-all">
+              <Camera size={16} />
+              Take / Upload Photo
+              <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoCapture} />
+            </label>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function QuizMaterial({ material, onComplete, completed }) {
+  const questions = material.questions || []
+  const [answers, setAnswers] = useState({})
+  const [submitted, setSubmitted] = useState(false)
+
+  const allAnswered = questions.length > 0 && questions.every((_, i) => answers[i] !== undefined)
+  const correctCount = questions.filter((q, i) => answers[i] === q.correct).length
+  const score = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0
+  const passed = score >= (material.passingScore ?? 75)
+
+  const handleSubmit = () => {
+    setSubmitted(true)
+    if (passed) onComplete()
+  }
+
+  const handleRetry = () => {
+    setAnswers({})
+    setSubmitted(false)
+  }
+
+  if (submitted) {
+    return (
+      <div className="space-y-4">
+        <div
+          className={`p-5 rounded-xl border text-center ${
+            passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+          }`}
+        >
+          <p className={`text-3xl font-bold ${passed ? 'text-green-600' : 'text-red-600'}`}>{score}%</p>
+          <p className={`text-sm font-semibold mt-1 ${passed ? 'text-green-700' : 'text-red-700'}`}>
+            {passed ? 'Passed!' : `Not quite — need ${material.passingScore ?? 75}% to pass`}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">{correctCount} of {questions.length} correct</p>
+        </div>
+        <div className="space-y-3">
+          {questions.map((q, qi) => (
+            <div key={qi} className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+              <p className="text-sm font-medium text-gray-800 mb-2">{qi + 1}. {q.question}</p>
+              <div className="space-y-1">
+                {q.options.map((opt, oi) => (
+                  <div
+                    key={oi}
+                    className={`text-xs px-2 py-1 rounded-md ${
+                      oi === q.correct
+                        ? 'bg-green-100 text-green-700 font-medium'
+                        : oi === answers[qi]
+                        ? 'bg-red-100 text-red-700'
+                        : 'text-gray-400'
+                    }`}
+                  >
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        {!passed && (
+          <button onClick={handleRetry} className="w-full btn-primary py-3">
+            Retry Quiz
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {questions.map((q, qi) => (
+        <div key={qi} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+          <p className="text-sm font-medium text-gray-800 mb-3">{qi + 1}. {q.question}</p>
+          <div className="space-y-2">
+            {q.options.map((opt, oi) => (
+              <button
+                key={oi}
+                onClick={() => setAnswers((a) => ({ ...a, [qi]: oi }))}
+                className={`w-full flex items-center gap-2 p-2.5 rounded-lg border text-left text-sm transition-colors ${
+                  answers[qi] === oi
+                    ? 'border-brand-400 bg-brand-50 text-brand-700 font-medium'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
+                    answers[qi] === oi ? 'border-brand-600' : 'border-gray-300'
+                  }`}
+                >
+                  {answers[qi] === oi && <div className="w-1.5 h-1.5 rounded-full bg-brand-600" />}
+                </div>
+                {opt}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      <button
+        onClick={handleSubmit}
+        disabled={!allAnswered}
+        className="w-full btn-primary py-3 disabled:opacity-40"
+      >
+        Submit Quiz
+      </button>
+    </div>
+  )
+}
+
+function DocumentMaterial({ material, onComplete, completed }) {
+  return (
+    <div className="space-y-4">
+      {material.description && (
+        <div
+          className="prose prose-sm max-w-none p-4 rounded-xl bg-gray-50 border border-gray-100 text-sm text-gray-700"
+          dangerouslySetInnerHTML={{ __html: material.description }}
+        />
+      )}
+      {material.fileUrl && (
+        <a
+          href={material.fileUrl}
+          download={material.fileName || 'document'}
+          className="flex items-center gap-3 p-3 rounded-xl bg-rose-50 border border-rose-100 hover:bg-rose-100 transition-colors group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-rose-600 flex items-center justify-center shrink-0">
+            <Paperclip size={16} className="text-white" />
+          </div>
+          <span className="flex-1 text-sm font-medium text-rose-900 truncate">
+            {material.fileName || 'Attached document'}
+          </span>
+          <Download size={16} className="text-rose-400 group-hover:text-rose-600 shrink-0" />
+        </a>
+      )}
+      <button
+        onClick={onComplete}
+        className={`w-full py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+          completed
+            ? 'bg-green-100 text-green-700 border border-green-200'
+            : 'bg-brand-600 hover:bg-brand-700 text-white'
+        }`}
+      >
+        {completed ? (
+          <><Check size={16} /> {material.acknowledgmentRequired ? 'Acknowledged' : 'Read'}</>
+        ) : material.acknowledgmentRequired ? (
+          'I Acknowledge'
+        ) : (
+          'Mark as Read'
+        )}
+      </button>
+    </div>
+  )
+}
+
+function TaskMaterial({ material, onComplete, completed }) {
+  return (
+    <div className="space-y-4">
+      {material.instructions && (
+        <div
+          className="prose prose-sm max-w-none p-4 rounded-xl bg-orange-50 border border-orange-100 text-sm text-gray-700"
+          dangerouslySetInnerHTML={{ __html: material.instructions }}
+        />
+      )}
+      <button
+        onClick={onComplete}
+        className={`w-full py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+          completed
+            ? 'bg-green-100 text-green-700 border border-green-200'
+            : 'bg-brand-600 hover:bg-brand-700 text-white'
+        }`}
+      >
+        {completed ? <><Check size={16} /> Completed</> : material.requiresConfirmation ? 'Confirm Completion' : 'Mark as Done'}
+      </button>
+    </div>
+  )
+}
+
+function MeetingMaterial({ material, onComplete, completed }) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4 p-4 rounded-xl bg-indigo-50 border border-indigo-100 text-sm">
+        {material.with && <span className="text-indigo-700 font-medium">With {material.with}</span>}
+        {material.durationMin && (
+          <span className="flex items-center gap-1 text-indigo-500">
+            <Clock size={12} /> {material.durationMin} min
+          </span>
+        )}
+      </div>
+      {material.notes && (
+        <div
+          className="prose prose-sm max-w-none p-4 rounded-xl bg-gray-50 border border-gray-100 text-sm text-gray-700"
+          dangerouslySetInnerHTML={{ __html: material.notes }}
+        />
+      )}
+      <button
+        onClick={onComplete}
+        className={`w-full py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all ${
+          completed
+            ? 'bg-green-100 text-green-700 border border-green-200'
+            : 'bg-brand-600 hover:bg-brand-700 text-white'
+        }`}
+      >
+        {completed ? <><Check size={16} /> Done</> : 'Mark as Done'}
+      </button>
     </div>
   )
 }
@@ -147,6 +413,16 @@ function ReadingMaterial({ material, onComplete, completed }) {
       </button>
     </div>
   )
+}
+
+const MATERIAL_ICONS = {
+  video: Video,
+  reading: FileText,
+  checklist: ListChecks,
+  quiz: ClipboardList,
+  task: Wrench,
+  document: FileSignature,
+  meeting: Calendar,
 }
 
 export default function Preview() {
@@ -191,7 +467,7 @@ export default function Preview() {
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(`/programs/${id}`)} className="btn-ghost p-2">
+            <button onClick={() => navigate(-1)} className="btn-ghost p-2">
               <ArrowLeft size={18} />
             </button>
             {company?.logo ? (
@@ -225,6 +501,12 @@ export default function Preview() {
           </div>
         </div>
       </div>
+
+      {program.headerImage && (
+        <div className="max-w-5xl mx-auto px-4 pt-4">
+          <img src={program.headerImage} alt="" className="w-full h-40 sm:h-56 object-cover rounded-2xl" />
+        </div>
+      )}
 
       <div className="max-w-5xl mx-auto px-4 py-6 flex gap-6">
         {/* Stage nav - desktop */}
@@ -300,7 +582,7 @@ export default function Preview() {
               {materials.length > 1 && (
                 <div className="flex gap-1 mb-4 bg-gray-100 rounded-xl p-1 overflow-x-auto">
                   {materials.map((mat, idx) => {
-                    const Icon = mat.type === 'video' ? Video : mat.type === 'checklist' ? ListChecks : FileText
+                    const Icon = MATERIAL_ICONS[mat.type] || FileText
                     return (
                       <button
                         key={mat.id}
@@ -353,6 +635,34 @@ export default function Preview() {
                   )}
                   {material.type === 'reading' && (
                     <ReadingMaterial
+                      material={material}
+                      completed={!!completedMaterials[material.id]}
+                      onComplete={() => markComplete(material.id)}
+                    />
+                  )}
+                  {material.type === 'quiz' && (
+                    <QuizMaterial
+                      material={material}
+                      completed={!!completedMaterials[material.id]}
+                      onComplete={() => markComplete(material.id)}
+                    />
+                  )}
+                  {material.type === 'document' && (
+                    <DocumentMaterial
+                      material={material}
+                      completed={!!completedMaterials[material.id]}
+                      onComplete={() => markComplete(material.id)}
+                    />
+                  )}
+                  {material.type === 'task' && (
+                    <TaskMaterial
+                      material={material}
+                      completed={!!completedMaterials[material.id]}
+                      onComplete={() => markComplete(material.id)}
+                    />
+                  )}
+                  {material.type === 'meeting' && (
+                    <MeetingMaterial
                       material={material}
                       completed={!!completedMaterials[material.id]}
                       onComplete={() => markComplete(material.id)}
