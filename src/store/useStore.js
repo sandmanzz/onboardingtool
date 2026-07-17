@@ -766,6 +766,8 @@ const useStore = create(persist((set, get) => ({
           id: generateId(),
           assignedProgramId: null,
           completedMaterials: [],
+          materialDetails: {},
+          accessToken: generateId(),
           status: 'active',
           ...employee,
         },
@@ -797,6 +799,25 @@ const useStore = create(persist((set, get) => ({
         return { ...e, completedMaterials: [...e.completedMaterials, materialId] }
       }),
     })),
+
+  recordMaterialDetail: (employeeId, materialId, detail) =>
+    set((s) => ({
+      employees: s.employees.map((e) =>
+        e.id === employeeId
+          ? { ...e, materialDetails: { ...(e.materialDetails || {}), [materialId]: detail } }
+          : e
+      ),
+    })),
+
+  ensureEmployeeAccess: (employeeId) => {
+    const existing = get().employees.find((e) => e.id === employeeId)?.accessToken
+    if (existing) return existing
+    const token = generateId()
+    set((s) => ({
+      employees: s.employees.map((e) => (e.id === employeeId ? { ...e, accessToken: token } : e)),
+    }))
+    return token
+  },
 
   duplicateProgram: (id) =>
     set((s) => {

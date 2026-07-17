@@ -4,9 +4,10 @@ import {
   ArrowLeft, Save, Trash2, CheckCircle2, Clock,
   ExternalLink, Video, FileText,
   ListChecks, ClipboardList, Wrench, FileSignature, Calendar,
-  User, ChevronDown,
+  User, ChevronDown, Link2, Copy, MessageCircle, PenLine, Camera, X,
 } from 'lucide-react'
 import useStore from '../store/useStore'
+import useToastStore from '../store/useToastStore'
 
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Intern', 'Probation', 'Freelance']
 
@@ -47,10 +48,17 @@ function daysSince(dateStr) {
   return Math.max(0, Math.floor((new Date('2026-07-17') - new Date(dateStr)) / 86400000))
 }
 
+function formatDateTime(iso) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
+
 export default function EmployeeDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { employees, programs, company, addEmployee, updateEmployee, deleteEmployee, assignProgram } = useStore()
+  const { employees, programs, company, addEmployee, updateEmployee, deleteEmployee, assignProgram, ensureEmployeeAccess } = useStore()
+  const showToast = useToastStore((s) => s.showToast)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const isNew = !id || id === 'new'
   const employee = isNew ? null : employees.find((e) => e.id === id)
@@ -71,6 +79,7 @@ export default function EmployeeDetail() {
   const [saved, setSaved] = useState(false)
   const [tab, setTab] = useState('details')
   const [expandedStages, setExpandedStages] = useState({})
+  const [lightboxPhoto, setLightboxPhoto] = useState(null)
 
   useEffect(() => {
     if (employee) {
@@ -109,6 +118,29 @@ export default function EmployeeDetail() {
   }
 
   const handleAssign = (programId) => assignProgram(id, programId || null)
+
+  const getOnboardingUrl = () => {
+    const token = ensureEmployeeAccess(id)
+    return `${window.location.origin}/start/${token}`
+  }
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(getOnboardingUrl())
+    setLinkCopied(true)
+    showToast('Onboarding link copied')
+    setTimeout(() => setLinkCopied(false), 2000)
+  }
+
+  const handleWhatsAppShare = () => {
+    const url = getOnboardingUrl()
+    const firstName = employee?.name?.split(' ')[0] || 'there'
+    const message = `Hi ${firstName}! Here's your onboarding link for ${company?.name || 'the team'} — no login needed, just tap and go: ${url}`
+    const digits = (employee?.phone || '').replace(/\D/g, '')
+    const waUrl = digits
+      ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
+      : `https://wa.me/?text=${encodeURIComponent(message)}`
+    window.open(waUrl, '_blank', 'noopener')
+  }
 
   const toggleStage = (stageId) =>
     setExpandedStages((s) => ({ ...s, [stageId]: !s[stageId] }))
@@ -436,6 +468,44 @@ export default function EmployeeDetail() {
             </div>
           </div>
 
+          {/* Onboarding link — the actual way this reaches the employee */}
+          {employee.assignedProgramId && (
+            <div className="card p-6 border-brand-200 bg-brand-50/30">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center shrink-0">
+                  <Link2 size={16} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Onboarding Link</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Send this to {employee.name.split(' ')[0]} so they can complete their onboarding on their own phone — no login required.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  className="input flex-1 text-xs font-mono"
+                  readOnly
+                  value={getOnboardingUrl()}
+                  onClick={(e) => e.target.select()}
+                />
+                <div className="flex gap-2 shrink-0">
+                  <button onClick={handleCopyLink} className="btn-secondary flex items-center gap-1.5 px-3 whitespace-nowrap">
+                    <Copy size={14} />
+                    {linkCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                  <button
+                    onClick={handleWhatsAppShare}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition-colors whitespace-nowrap"
+                  >
+                    <MessageCircle size={14} />
+                    WhatsApp
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Rich progress breakdown */}
           {progress && (
             <div className="card overflow-hidden">
@@ -511,12 +581,14 @@ export default function EmployeeDetail() {
                           {stageMats.map((mat) => {
                             const done = employee.completedMaterials.includes(mat.id)
                             const Icon = MATERIAL_ICONS[mat.type] || FileText
+                            const detail = (employee.materialDetails || {})[mat.id]
+                            const photos = detail?.photos ? Object.values(detail.photos) : []
                             return (
                               <div
                                 key={mat.id}
-                                className={`flex items-center gap-3 p-3 rounded-lg border text-sm bg-white ${done ? 'border-green-100' : 'border-gray-100'}`}
+                                className={`flex items-start gap-3 p-3 rounded-lg border text-sm bg-white ${done ? 'border-green-100' : 'border-gray-100'}`}
                               >
-                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${done ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${done ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
                                   {done ? <CheckCircle2 size={14} /> : <Icon size={13} />}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -524,6 +596,37 @@ export default function EmployeeDetail() {
                                     {mat.title}
                                   </p>
                                   <p className="text-xs text-gray-400 capitalize">{mat.type}</p>
+
+                                  {/* Audit trail detail — the actual proof of completion */}
+                                  {mat.type === 'quiz' && detail && (
+                                    <div className="flex items-center gap-1.5 mt-1.5">
+                                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${detail.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        {detail.score}% · {detail.passed ? 'Passed' : 'Failed'}
+                                      </span>
+                                      {detail.submittedAt && (
+                                        <span className="text-[10px] text-gray-400">{formatDateTime(detail.submittedAt)}</span>
+                                      )}
+                                    </div>
+                                  )}
+                                  {mat.type === 'document' && detail?.signedBy && (
+                                    <div className="flex items-center gap-1 mt-1.5 text-[11px] text-gray-500">
+                                      <PenLine size={11} className="text-brand-500 shrink-0" />
+                                      Signed by <span className="font-medium text-gray-700">{detail.signedBy}</span>
+                                      {detail.signedAt && <span className="text-gray-400">· {formatDateTime(detail.signedAt)}</span>}
+                                    </div>
+                                  )}
+                                  {mat.type === 'checklist' && photos.length > 0 && (
+                                    <div className="flex items-center gap-1.5 mt-1.5">
+                                      {photos.map((src, i) => (
+                                        <button key={i} onClick={() => setLightboxPhoto(src)} className="shrink-0">
+                                          <img src={src} alt="" className="w-8 h-8 rounded-md object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
+                                        </button>
+                                      ))}
+                                      <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                                        <Camera size={10} /> evidence
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                                 <span className={`text-xs font-medium shrink-0 ${done ? 'text-green-600' : 'text-gray-300'}`}>
                                   {done ? 'Completed' : 'Pending'}
@@ -549,6 +652,19 @@ export default function EmployeeDetail() {
               <p className="text-sm text-gray-400">Select a program above to start tracking onboarding progress.</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Photo evidence lightbox */}
+      {lightboxPhoto && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-6"
+          onClick={() => setLightboxPhoto(null)}
+        >
+          <button className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white">
+            <X size={20} />
+          </button>
+          <img src={lightboxPhoto} alt="Checklist evidence" className="max-w-full max-h-full rounded-xl shadow-2xl" />
         </div>
       )}
     </div>

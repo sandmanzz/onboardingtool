@@ -10,6 +10,7 @@ import Programs from './pages/Programs'
 import ProgramEditor from './pages/ProgramEditor'
 import Preview from './pages/Preview'
 import PublicShare from './pages/PublicShare'
+import EmployeePortal from './pages/EmployeePortal'
 import Employees from './pages/Employees'
 import EmployeeDetail from './pages/EmployeeDetail'
 import OwnerDashboard from './pages/OwnerDashboard'
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="/register" element={isSetupComplete ? <Navigate to={defaultRedirect} replace /> : <Register />} />
         <Route path="/setup" element={<Setup />} />
         <Route path="/share/:token" element={<PublicShare />} />
+        <Route path="/start/:token" element={<EmployeePortal />} />
 
         {/* Full-screen employee preview — no sidebar */}
         <Route

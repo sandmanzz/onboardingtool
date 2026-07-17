@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users, Plus, Search, UserPlus, ChevronRight, CheckCircle2,
-  Clock, AlertCircle, UserCheck, Calendar
+  Clock, AlertCircle, UserCheck, Calendar, Link2,
 } from 'lucide-react'
 import useStore from '../store/useStore'
+import useToastStore from '../store/useToastStore'
+import IconButton from '../components/IconButton'
 
 function getInitials(name) {
   return name
@@ -64,7 +66,15 @@ function ProgressBadge({ progress }) {
 
 export default function Employees() {
   const navigate = useNavigate()
-  const { employees, programs, deleteEmployee } = useStore()
+  const { employees, programs, deleteEmployee, ensureEmployeeAccess } = useStore()
+  const showToast = useToastStore((s) => s.showToast)
+
+  const handleCopyLink = (e, emp) => {
+    e.stopPropagation()
+    const token = ensureEmployeeAccess(emp.id)
+    navigator.clipboard.writeText(`${window.location.origin}/start/${token}`)
+    showToast(`Onboarding link copied for ${emp.name.split(' ')[0]}`)
+  }
   const [search, setSearch] = useState('')
   const [deptFilter, setDeptFilter] = useState('All')
 
@@ -255,6 +265,16 @@ export default function Employees() {
                       year: 'numeric',
                     })}
                   </div>
+
+                  {emp.assignedProgramId && (
+                    <IconButton
+                      icon={Link2}
+                      label="Copy onboarding link"
+                      onClick={(e) => handleCopyLink(e, emp)}
+                      className="btn-ghost p-2 hidden sm:flex"
+                      size={15}
+                    />
+                  )}
 
                   <ChevronRight size={16} className="text-gray-300 group-hover:text-gray-500 shrink-0 transition-colors" />
                 </div>

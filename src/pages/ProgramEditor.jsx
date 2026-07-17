@@ -41,7 +41,7 @@ export default function ProgramEditor() {
     headerImage: program?.headerImage || '',
   })
   const [linkCopied, setLinkCopied] = useState(false)
-  const activeProgramId = isNew ? null : id
+  const [activeProgramId, setActiveProgramId] = useState(isNew ? null : id)
   const [expandedStage, setExpandedStage] = useState(null)
   const [editingStage, setEditingStage] = useState(null)
   const [addingMaterial, setAddingMaterial] = useState(null)
@@ -58,11 +58,15 @@ export default function ProgramEditor() {
     if (!form.name.trim()) return
     if (isNew && !activeProgramId) {
       addProgram(form)
+      const newId = useStore.getState().programs.slice(-1)[0]?.id
+      setActiveProgramId(newId)
+      navigate(`/programs/${newId}`, { replace: true })
+      showToast('Program created — now add your stages below')
     } else {
       updateProgram(activeProgramId || id, form)
+      showToast('Program saved')
+      navigate('/dashboard')
     }
-    showToast('Program saved')
-    navigate('/dashboard')
   }
 
   const handleAddStage = () => {
