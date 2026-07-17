@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import useToastStore from '../store/useToastStore'
+import { sendOnboardingWhatsApp } from '../utils/whatsapp'
 
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Intern', 'Probation', 'Freelance']
 
@@ -133,13 +134,7 @@ export default function EmployeeDetail() {
 
   const handleWhatsAppShare = () => {
     const url = getOnboardingUrl()
-    const firstName = employee?.name?.split(' ')[0] || 'there'
-    const message = `Hi ${firstName}! Here's your onboarding link for ${company?.name || 'the team'} — no login needed, just tap and go: ${url}`
-    const digits = (employee?.phone || '').replace(/\D/g, '')
-    const waUrl = digits
-      ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
-      : `https://wa.me/?text=${encodeURIComponent(message)}`
-    window.open(waUrl, '_blank', 'noopener')
+    sendOnboardingWhatsApp({ employee, company, program: progress?.program, url, pct: progress?.percent ?? 0 })
   }
 
   const toggleStage = (stageId) =>

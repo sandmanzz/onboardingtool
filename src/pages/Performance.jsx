@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   TrendingUp, Users, CheckCircle2, AlertTriangle, Clock,
-  Search, ChevronRight, UserX, BarChart3,
+  Search, ChevronRight, UserX, BarChart3, MessageCircle,
 } from 'lucide-react'
 import useStore from '../store/useStore'
+import { sendOnboardingWhatsApp } from '../utils/whatsapp'
 
 function getDaysSince(dateStr) {
   if (!dateStr) return 0
@@ -62,11 +63,18 @@ function ProgressBar({ pct, status }) {
 }
 
 export default function Performance() {
-  const { employees, programs } = useStore()
+  const { employees, programs, company, ensureEmployeeAccess } = useStore()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterDept, setFilterDept] = useState('all')
+
+  const handleRemind = (evt, e) => {
+    evt.stopPropagation()
+    const token = ensureEmployeeAccess(e.id)
+    const url = `${window.location.origin}/start/${token}`
+    sendOnboardingWhatsApp({ employee: e, company, program: e.progress?.program, url, pct: e.progress?.pct ?? 0 })
+  }
 
   const enriched = employees.map((e) => {
     const daysSince = getDaysSince(e.startDate)
@@ -302,7 +310,18 @@ export default function Performance() {
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
-                        <ChevronRight size={16} className="text-gray-300" />
+                        <div className="flex items-center gap-2 justify-end">
+                          {e.status === 'at-risk' && (
+                            <button
+                              onClick={(evt) => handleRemind(evt, e)}
+                              title="Send a WhatsApp reminder"
+                              className="hidden lg:flex p-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
+                            >
+                              <MessageCircle size={14} />
+                            </button>
+                          )}
+                          <ChevronRight size={16} className="text-gray-300" />
+                        </div>
                       </td>
                     </tr>
                   )

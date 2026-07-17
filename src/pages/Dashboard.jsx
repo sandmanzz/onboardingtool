@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   CheckCircle2, AlertTriangle, Clock, ArrowRight, Plus,
-  UserX, ChevronRight, Zap, Users,
+  UserX, ChevronRight, Zap, Users, MessageCircle,
 } from 'lucide-react'
 import useStore from '../store/useStore'
+import { sendOnboardingWhatsApp } from '../utils/whatsapp'
+import NewProgramModal from '../components/NewProgramModal'
 
 const AVATAR_COLORS = ['#4f5fff', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
 
@@ -87,7 +90,15 @@ function Bar({ pct, variant = 'default' }) {
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { company, programs, employees } = useStore()
+  const { company, programs, employees, ensureEmployeeAccess } = useStore()
+  const [showNewProgram, setShowNewProgram] = useState(false)
+
+  const handleRemind = (evt, e) => {
+    evt.stopPropagation()
+    const token = ensureEmployeeAccess(e.id)
+    const url = `${window.location.origin}/start/${token}`
+    sendOnboardingWhatsApp({ employee: e, company, program: e.progress?.program, url, pct: e.progress?.pct ?? 0 })
+  }
 
   const enriched = employees.map(e => {
     const days = daysSince(e.startDate)
@@ -214,6 +225,14 @@ export default function Dashboard() {
                       : `${e.days} days in — only ${e.progress?.pct}% done. Consider checking in.`}
                   </p>
                 </div>
+                <button
+                  onClick={(evt) => handleRemind(evt, e)}
+                  className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white shrink-0"
+                  title="Send a WhatsApp reminder"
+                >
+                  <MessageCircle size={12} />
+                  Remind
+                </button>
                 <span className="text-xs text-amber-700 font-semibold flex items-center gap-1 shrink-0">
                   View <ChevronRight size={13} />
                 </span>
@@ -257,7 +276,7 @@ export default function Dashboard() {
           </p>
           <div className="flex items-center gap-3 justify-center">
             {programs.length === 0 && (
-              <button onClick={() => navigate('/programs/new')} className="btn-secondary">
+              <button onClick={() => setShowNewProgram(true)} className="btn-secondary">
                 Create Program first
               </button>
             )}
@@ -470,7 +489,7 @@ export default function Dashboard() {
               {programs.length === 0 ? (
                 <div className="card p-6 text-center">
                   <p className="text-xs text-gray-400 mb-3">No programs yet</p>
-                  <button onClick={() => navigate('/programs/new')} className="btn-primary text-xs w-full">
+                  <button onClick={() => setShowNewProgram(true)} className="btn-primary text-xs w-full">
                     <Plus size={13} className="mr-1" /> Create Program
                   </button>
                 </div>
@@ -547,7 +566,7 @@ export default function Dashboard() {
                   ))}
 
                   <button
-                    onClick={() => navigate('/programs/new')}
+                    onClick={() => setShowNewProgram(true)}
                     className="w-full py-2.5 rounded-xl border-2 border-dashed border-gray-200 text-xs text-gray-400 hover:border-brand-300 hover:text-brand-500 transition-colors font-medium"
                   >
                     + New Program
@@ -559,6 +578,8 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      <NewProgramModal open={showNewProgram} onClose={() => setShowNewProgram(false)} />
     </div>
   )
 }

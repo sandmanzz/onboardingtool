@@ -17,6 +17,7 @@ import useStore from '../store/useStore'
 import useToastStore from '../store/useToastStore'
 import IconButton from '../components/IconButton'
 import InsightsDrawer from '../components/InsightsDrawer'
+import NewProgramModal from '../components/NewProgramModal'
 import { downloadProgramPdf } from '../utils/programPdf'
 
 export default function Programs() {
@@ -24,6 +25,7 @@ export default function Programs() {
   const { programs, company, deleteProgram, duplicateProgram } = useStore()
   const [insightsProgramId, setInsightsProgramId] = useState(null)
   const [pdfLoadingId, setPdfLoadingId] = useState(null)
+  const [showNewProgram, setShowNewProgram] = useState(false)
   const showToast = useToastStore((s) => s.showToast)
 
   const handleDownloadPdf = async (program) => {
@@ -49,7 +51,7 @@ export default function Programs() {
           </p>
         </div>
         <button
-          onClick={() => navigate('/programs/new')}
+          onClick={() => setShowNewProgram(true)}
           className="btn-primary flex items-center gap-2 shrink-0"
         >
           <Plus size={16} />
@@ -71,7 +73,7 @@ export default function Programs() {
             learning — from videos to checklists to readings.
           </p>
           <button
-            onClick={() => navigate('/programs/new')}
+            onClick={() => setShowNewProgram(true)}
             className="btn-primary inline-flex items-center gap-2"
           >
             <Plus size={16} />
@@ -198,6 +200,7 @@ export default function Programs() {
       )}
 
       <InsightsDrawer programId={insightsProgramId} onClose={() => setInsightsProgramId(null)} />
+      <NewProgramModal open={showNewProgram} onClose={() => setShowNewProgram(false)} />
     </div>
   )
 }

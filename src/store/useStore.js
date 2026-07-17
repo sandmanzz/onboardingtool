@@ -839,6 +839,32 @@ const useStore = create(persist((set, get) => ({
       return { programs: [...s.programs, clone] }
     }),
 
+  addProgramFromTemplate: (template) =>
+    set((s) => ({
+      programs: [
+        ...s.programs,
+        {
+          id: generateId(),
+          name: template.name,
+          description: template.description || '',
+          targetRole: template.targetRole || '',
+          estimatedDays: template.estimatedDays || '',
+          status: 'draft',
+          headerImage: '',
+          shareToken: null,
+          createdAt: new Date().toISOString(),
+          stages: template.stages.map((stage, i) => ({
+            id: generateId(),
+            order: i + 1,
+            name: stage.name,
+            description: stage.description || '',
+            deadline: stage.deadline ?? null,
+            materials: stage.materials.map((m) => ({ id: generateId(), ...m })),
+          })),
+        },
+      ],
+    })),
+
   enableShare: (programId) =>
     set((s) => ({
       programs: s.programs.map((p) =>
