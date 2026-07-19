@@ -1,19 +1,42 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { BookOpen, Clock, Users, CheckCircle2, BarChart3, ListChecks, FileDown, Loader2, QrCode, X } from 'lucide-react'
-import useStore from '../store/useStore'
+import { supabase } from '../lib/supabaseClient'
 import QRCodeImage from '../components/QRCodeImage'
 import { downloadProgramPdf } from '../utils/programPdf'
 
 export default function PublicShare() {
   const { token } = useParams()
-  const { programs, employees, company } = useStore()
+  const [loading, setLoading] = useState(true)
+  const [shared, setShared] = useState(null)
   const [pdfLoading, setPdfLoading] = useState(false)
   const [showQr, setShowQr] = useState(false)
 
-  const program = programs.find((p) => p.shareToken === token)
+  useEffect(() => {
+    let cancelled = false
+    supabase.rpc('get_shared_program', { p_token: token }).then(({ data, error }) => {
+      if (cancelled) return
+      setLoading(false)
+      if (error || !data || data.error) {
+        setShared(null)
+        return
+      }
+      setShared(data)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [token])
 
-  if (!program) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 size={24} className="animate-spin text-gray-300" />
+      </div>
+    )
+  }
+
+  if (!shared) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-gray-50 px-4 text-center">
         <BookOpen size={32} className="text-gray-300" />
@@ -22,29 +45,14 @@ export default function PublicShare() {
     )
   }
 
-  const brandColor = company?.primaryColor || '#4f5fff'
-  const allMaterials = program.stages.flatMap((s) => s.materials)
-  const enrolled = employees.filter((e) => e.assignedProgramId === program.id)
-  const completedCount = enrolled.filter((e) => {
-    const total = allMaterials.length
-    const done = e.completedMaterials.filter((mid) => allMaterials.some((m) => m.id === mid)).length
-    return total > 0 && done === total
-  }).length
-  const avgPct = enrolled.length
-    ? Math.round(
-        enrolled.reduce((sum, e) => {
-          const total = allMaterials.length
-          const done = e.completedMaterials.filter((mid) => allMaterials.some((m) => m.id === mid)).length
-          return sum + (total > 0 ? (done / total) * 100 : 0)
-        }, 0) / enrolled.length
-      )
-    : 0
-  const completionRate = enrolled.length ? Math.round((completedCount / enrolled.length) * 100) : 0
+  const { program, company, stages, stats: rawStats } = shared
+  const brandColor = company?.primary_color || '#4f5fff'
+  const materialCount = stages.reduce((sum, s) => sum + (s.material_count || 0), 0)
 
   const stats = [
-    { label: 'Enrolled', value: enrolled.length, icon: Users },
-    { label: 'Avg. Progress', value: `${avgPct}%`, icon: BarChart3 },
-    { label: 'Completion Rate', value: `${completionRate}%`, icon: CheckCircle2 },
+    { label: 'Enrolled', value: rawStats.enrolled, icon: Users },
+    { label: 'Avg. Progress', value: `${rawStats.avg_pct}%`, icon: BarChart3 },
+    { label: 'Completion Rate', value: rawStats.enrolled ? `${Math.round((rawStats.completed / rawStats.enrolled) * 100)}%` : '0%', icon: CheckCircle2 },
   ]
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
@@ -53,7 +61,11 @@ export default function PublicShare() {
     if (pdfLoading) return
     setPdfLoading(true)
     try {
-      await downloadProgramPdf(program, company, shareUrl)
+      await downloadProgramPdf(
+        { ...program, headerImage: program.header_image_url, stages },
+        { ...company, logo: company?.logo_url, primaryColor: company?.primary_color },
+        shareUrl
+      )
     } finally {
       setPdfLoading(false)
     }
@@ -63,8 +75,8 @@ export default function PublicShare() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
-          {company?.logo ? (
-            <img src={company.logo} className="w-8 h-8 rounded-lg object-cover" alt="" />
+          {company?.logo_url ? (
+            <img src={company.logo_url} className="w-8 h-8 rounded-lg object-cover" alt="" />
           ) : (
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
@@ -104,8 +116,8 @@ export default function PublicShare() {
       )}
 
       <div className="max-w-3xl mx-auto px-4 py-8">
-        {program.headerImage && (
-          <img src={program.headerImage} alt="" className="w-full h-40 sm:h-56 object-cover rounded-2xl mb-6" />
+        {program.header_image_url && (
+          <img src={program.header_image_url} alt="" className="w-full h-40 sm:h-56 object-cover rounded-2xl mb-6" />
         )}
 
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{program.name}</h1>
@@ -117,14 +129,14 @@ export default function PublicShare() {
         )}
 
         <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 text-xs text-gray-400 mb-6">
-          {program.targetRole && <span className="badge bg-blue-50 text-blue-600">{program.targetRole}</span>}
-          {program.estimatedDays && (
+          {program.target_role && <span className="badge bg-blue-50 text-blue-600">{program.target_role}</span>}
+          {program.estimated_days && (
             <span className="flex items-center gap-1.5">
-              <Clock size={12} /> {program.estimatedDays} days
+              <Clock size={12} /> {program.estimated_days} days
             </span>
           )}
           <span className="flex items-center gap-1.5">
-            <ListChecks size={12} /> {program.stages.length} stages · {allMaterials.length} materials
+            <ListChecks size={12} /> {stages.length} stages · {materialCount} materials
           </span>
         </div>
 
@@ -145,7 +157,7 @@ export default function PublicShare() {
             <h3 className="font-semibold text-gray-900 text-sm">Program Structure</h3>
           </div>
           <div className="divide-y divide-gray-50">
-            {program.stages.map((stage, idx) => (
+            {stages.map((stage, idx) => (
               <div key={stage.id} className="px-4 py-3 flex items-center gap-3">
                 <div
                   className="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0"
@@ -154,7 +166,7 @@ export default function PublicShare() {
                   {idx + 1}
                 </div>
                 <p className="text-sm font-medium text-gray-800 flex-1">{stage.name}</p>
-                <span className="text-xs text-gray-400">{stage.materials.length} materials</span>
+                <span className="text-xs text-gray-400">{stage.material_count} materials</span>
               </div>
             ))}
           </div>

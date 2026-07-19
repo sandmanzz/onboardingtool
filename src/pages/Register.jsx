@@ -85,8 +85,7 @@ export default function Register() {
     if (form.password.length < 8) { setError('Password must be at least 8 characters.'); return }
     if (form.password !== form.confirm) { setError('Passwords do not match.'); return }
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 600))
-    const res = register({ name: form.name, email: form.email, password: form.password, companyName: form.companyName })
+    const res = await register({ name: form.name, email: form.email, password: form.password, companyName: form.companyName })
     setLoading(false)
     if (!res.success) { setError(res.error); return }
     navigate('/dashboard')

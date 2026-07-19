@@ -9,8 +9,8 @@ export default function NewProgramModal({ open, onClose }) {
 
   if (!open) return null
 
-  const handleUseTemplate = (template) => {
-    addProgramFromTemplate(template)
+  const handleUseTemplate = async (template) => {
+    await addProgramFromTemplate(template)
     const programs = useStore.getState().programs
     const newId = programs[programs.length - 1]?.id
     onClose()

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Building2, Save, Upload, Check, Plus, Pencil, Trash2, X } from 'lucide-react'
+import { Building2, Save, Upload, Check, Plus, Pencil, Trash2, X, Loader2 } from 'lucide-react'
 import useStore from '../store/useStore'
+import { supabase } from '../lib/supabaseClient'
 
 const INDUSTRIES = [
   'Technology', 'Finance', 'Healthcare', 'Education', 'Retail',
@@ -113,6 +114,7 @@ export default function Company() {
   const { company, updateCompany, addDepartment, renameDepartment, deleteDepartment } = useStore()
   const [form, setForm] = useState(company || {})
   const [saved, setSaved] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
 
   useEffect(() => {
     setForm(company || {})
@@ -120,12 +122,17 @@ export default function Company() {
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
-  const handleLogoChange = (e) => {
+  const handleLogoChange = async (e) => {
     const file = e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => update('logo', ev.target.result)
-    reader.readAsDataURL(file)
+    if (!file || !company?.id) return
+    setLogoUploading(true)
+    const path = `${company.id}/logo-${Date.now()}.${file.name.split('.').pop()}`
+    const { error } = await supabase.storage.from('company-logos').upload(path, file, { upsert: true })
+    if (!error) {
+      const { data } = supabase.storage.from('company-logos').getPublicUrl(path)
+      update('logo', data.publicUrl)
+    }
+    setLogoUploading(false)
   }
 
   const handleSave = () => {
@@ -154,9 +161,9 @@ export default function Company() {
               </div>
             )}
             <label className="btn-secondary flex items-center gap-2 cursor-pointer">
-              <Upload size={16} />
-              {form.logo ? 'Change Logo' : 'Upload Logo'}
-              <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+              {logoUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+              {logoUploading ? 'Uploading…' : form.logo ? 'Change Logo' : 'Upload Logo'}
+              <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} disabled={logoUploading} />
             </label>
           </div>
         </div>

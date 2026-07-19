@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import useStore from './store/useStore'
+import { isSupabaseConfigured } from './lib/supabaseClient'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -31,12 +33,30 @@ function RequireOwner({ children }) {
 }
 
 export default function App() {
-  const { isSetupComplete, currentUser } = useStore()
+  const { isSetupComplete, currentUser, authLoading, initSession } = useStore()
+
+  useEffect(() => {
+    initSession()
+  }, [initSession])
 
   const defaultRedirect = currentUser?.role === 'owner' ? '/owner' : '/dashboard'
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <BrowserRouter>
+      {!isSupabaseConfigured && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-800 text-sm px-4 py-2 text-center">
+          Supabase isn't configured yet — copy <code className="font-mono">.env.example</code> to{' '}
+          <code className="font-mono">.env</code> and add your project URL + anon key, then restart the dev server.
+        </div>
+      )}
       <Routes>
         {/* Public routes */}
         <Route

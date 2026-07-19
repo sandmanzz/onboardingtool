@@ -13,6 +13,7 @@ import RichTextEditor from '../components/RichTextEditor'
 import InsightsDrawer from '../components/InsightsDrawer'
 import QRCodeImage from '../components/QRCodeImage'
 import { downloadProgramPdf } from '../utils/programPdf'
+import { supabase } from '../lib/supabaseClient'
 
 const MATERIAL_TYPES = [
   { type: 'video', icon: Video, label: 'Video', color: 'text-purple-600 bg-purple-50' },
@@ -57,10 +58,10 @@ export default function ProgramEditor() {
     ? programs.find((p) => p.id === activeProgramId)
     : null
 
-  const handleSaveInfo = () => {
+  const handleSaveInfo = async () => {
     if (!form.name.trim()) return
     if (isNew && !activeProgramId) {
-      addProgram(form)
+      await addProgram(form)
       const newId = useStore.getState().programs.slice(-1)[0]?.id
       setActiveProgramId(newId)
       navigate(`/programs/${newId}`, { replace: true })
@@ -72,21 +73,28 @@ export default function ProgramEditor() {
     }
   }
 
-  const handleAddStage = () => {
+  const handleAddStage = async () => {
     if (!newStageName.trim() || !activeProgramId) return
-    addStage(activeProgramId, { name: newStageName.trim(), description: '', deadline: null })
+    await addStage(activeProgramId, { name: newStageName.trim(), description: '', deadline: null })
     setNewStageName('')
     setShowAddStage(false)
     const prog = useStore.getState().programs.find((p) => p.id === activeProgramId)
     if (prog) setExpandedStage(prog.stages.slice(-1)[0]?.id)
   }
 
-  const handleHeaderImageChange = (e) => {
+  const [headerUploading, setHeaderUploading] = useState(false)
+
+  const handleHeaderImageChange = async (e) => {
     const file = e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => setForm((f) => ({ ...f, headerImage: ev.target.result }))
-    reader.readAsDataURL(file)
+    if (!file || !company?.id) return
+    setHeaderUploading(true)
+    const path = `${company.id}/header-${Date.now()}.${file.name.split('.').pop()}`
+    const { error } = await supabase.storage.from('program-images').upload(path, file, { upsert: true })
+    if (!error) {
+      const { data } = supabase.storage.from('program-images').getPublicUrl(path)
+      setForm((f) => ({ ...f, headerImage: data.publicUrl }))
+    }
+    setHeaderUploading(false)
   }
 
   const handleToggleShare = () => {
@@ -177,9 +185,9 @@ export default function ProgramEditor() {
               </div>
             ) : (
               <label className="flex items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-brand-400 hover:bg-brand-50/30 cursor-pointer text-sm text-gray-500 transition-all">
-                <Image size={16} />
-                Upload a banner image shown at the top of this program
-                <input type="file" accept="image/*" className="hidden" onChange={handleHeaderImageChange} />
+                {headerUploading ? <Loader2 size={16} className="animate-spin" /> : <Image size={16} />}
+                {headerUploading ? 'Uploading…' : 'Upload a banner image shown at the top of this program'}
+                <input type="file" accept="image/*" className="hidden" onChange={handleHeaderImageChange} disabled={headerUploading} />
               </label>
             )}
           </div>
