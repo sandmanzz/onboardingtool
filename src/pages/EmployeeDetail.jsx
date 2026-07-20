@@ -4,10 +4,11 @@ import {
   ArrowLeft, Save, Trash2, CheckCircle2, Clock,
   ExternalLink, Video, FileText,
   ListChecks, ClipboardList, Wrench, FileSignature, Calendar,
-  User, ChevronDown, Link2, Copy, MessageCircle, PenLine, Camera, X,
+  User, ChevronDown, Link2, Copy, MessageCircle, PenLine, Camera, X, FileCheck2,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import useToastStore from '../store/useToastStore'
+import { sendOnboardingWhatsApp } from '../utils/whatsapp'
 
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Intern', 'Probation', 'Freelance']
 
@@ -133,13 +134,7 @@ export default function EmployeeDetail() {
 
   const handleWhatsAppShare = () => {
     const url = getOnboardingUrl()
-    const firstName = employee?.name?.split(' ')[0] || 'there'
-    const message = `Hi ${firstName}! Here's your onboarding link for ${company?.name || 'the team'} — no login needed, just tap and go: ${url}`
-    const digits = (employee?.phone || '').replace(/\D/g, '')
-    const waUrl = digits
-      ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
-      : `https://wa.me/?text=${encodeURIComponent(message)}`
-    window.open(waUrl, '_blank', 'noopener')
+    sendOnboardingWhatsApp({ employee, company, program: progress?.program, url, pct: progress?.percent ?? 0 })
   }
 
   const toggleStage = (stageId) =>
@@ -617,13 +612,28 @@ export default function EmployeeDetail() {
                                   )}
                                   {mat.type === 'checklist' && photos.length > 0 && (
                                     <div className="flex items-center gap-1.5 mt-1.5">
-                                      {photos.map((src, i) => (
-                                        <button key={i} onClick={() => setLightboxPhoto(src)} className="shrink-0">
-                                          <img src={src} alt="" className="w-8 h-8 rounded-md object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
-                                        </button>
-                                      ))}
+                                      {photos.map((p, i) => {
+                                        const isLegacyString = typeof p === 'string'
+                                        const src = isLegacyString ? p : p.url
+                                        const isImage = isLegacyString ? true : p.isImage
+                                        return isImage ? (
+                                          <button key={i} onClick={() => setLightboxPhoto(src)} className="shrink-0">
+                                            <img src={src} alt="" className="w-8 h-8 rounded-md object-cover border border-gray-200 hover:opacity-80 transition-opacity" />
+                                          </button>
+                                        ) : (
+                                          <a
+                                            key={i}
+                                            href={src}
+                                            download={p.name || 'proof'}
+                                            title={p.name}
+                                            className="w-8 h-8 rounded-md bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0 hover:bg-gray-100"
+                                          >
+                                            <FileCheck2 size={13} className="text-gray-500" />
+                                          </a>
+                                        )
+                                      })}
                                       <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
-                                        <Camera size={10} /> evidence
+                                        <Camera size={10} /> proof
                                       </span>
                                     </div>
                                   )}

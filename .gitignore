@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
 
 # Per-developer Supabase configuration. The publishable key is safe for the
 # client, but this keeps deployment configuration out of source control.

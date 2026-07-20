@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Check, PartyPopper, Link2Off, Clock3 } from 'lucide-react'
-import useStore from '../store/useStore'
+import { ArrowLeft, ArrowRight, Check, PartyPopper, Link2Off, Clock3, Loader2 } from 'lucide-react'
+import { supabase } from '../lib/supabaseClient'
 import { MaterialRenderer, MATERIAL_ICONS } from '../components/materials'
 
 function InvalidLink() {
@@ -61,21 +61,51 @@ function AllDone({ employee, company, brandColor, totalMaterials }) {
 
 export default function EmployeePortal() {
   const { token } = useParams()
-  const { employees, programs, company, markMaterialComplete, recordMaterialDetail } = useStore()
+  const [loading, setLoading] = useState(true)
+  const [portal, setPortal] = useState(null)
+  const [completedIds, setCompletedIds] = useState([])
+  const [details, setDetails] = useState({})
   const [activeStage, setActiveStage] = useState(0)
   const [activeMaterial, setActiveMaterial] = useState(0)
 
-  const employee = employees.find((e) => e.accessToken === token)
-  const brandColor = company?.primaryColor || '#4f5fff'
+  const load = async () => {
+    const { data, error } = await supabase.rpc('get_employee_portal', { p_token: token })
+    setLoading(false)
+    if (error || !data || data.error) {
+      setPortal(null)
+      return
+    }
+    setPortal(data)
+    setCompletedIds((data.completed || []).map((c) => c.material_id))
+    const d = {}
+    ;(data.completed || []).forEach((c) => {
+      if (c.detail != null) d[c.material_id] = c.detail
+    })
+    setDetails(d)
+  }
 
-  if (!employee) return <InvalidLink />
+  useEffect(() => {
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token])
 
-  const program = programs.find((p) => p.id === employee.assignedProgramId)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 size={24} className="animate-spin text-gray-300" />
+      </div>
+    )
+  }
+
+  if (!portal) return <InvalidLink />
+
+  const { employee, company, program } = portal
+  const brandColor = company?.primary_color || '#4f5fff'
+
   if (!program) return <NoProgramYet employee={employee} company={company} brandColor={brandColor} />
 
   const stages = program.stages || []
   const allMaterials = stages.flatMap((s) => s.materials)
-  const completedIds = employee.completedMaterials || []
   const doneCount = allMaterials.filter((m) => completedIds.includes(m.id)).length
   const progress = allMaterials.length > 0 ? Math.round((doneCount / allMaterials.length) * 100) : 0
   const isComplete = allMaterials.length > 0 && doneCount === allMaterials.length
@@ -87,10 +117,15 @@ export default function EmployeePortal() {
   const stage = stages[activeStage]
   const materials = stage?.materials || []
   const material = materials[activeMaterial]
-  const details = employee.materialDetails || {}
 
-  const handleComplete = (matId) => markMaterialComplete(employee.id, matId)
-  const handleDetail = (matId, detail) => recordMaterialDetail(employee.id, matId, detail)
+  const handleComplete = async (matId) => {
+    setCompletedIds((ids) => (ids.includes(matId) ? ids : [...ids, matId]))
+    await supabase.rpc('mark_material_complete', { p_token: token, p_material_id: matId })
+  }
+  const handleDetail = async (matId, detail) => {
+    setDetails((d) => ({ ...d, [matId]: detail }))
+    await supabase.rpc('record_material_detail', { p_token: token, p_material_id: matId, p_detail: detail })
+  }
 
   const goPrev = () => {
     if (activeMaterial > 0) setActiveMaterial((m) => m - 1)
@@ -115,8 +150,8 @@ export default function EmployeePortal() {
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-3">
           <div className="flex items-center gap-3 mb-2.5">
-            {company?.logo ? (
-              <img src={company.logo} className="w-8 h-8 rounded-lg object-cover shrink-0" alt="" />
+            {company?.logo_url ? (
+              <img src={company.logo_url} className="w-8 h-8 rounded-lg object-cover shrink-0" alt="" />
             ) : (
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
@@ -142,9 +177,9 @@ export default function EmployeePortal() {
         </div>
       </div>
 
-      {program.headerImage && (
+      {program.header_image_url && (
         <div className="max-w-lg mx-auto w-full px-4 pt-4">
-          <img src={program.headerImage} alt="" className="w-full h-36 object-cover rounded-2xl" />
+          <img src={program.header_image_url} alt="" className="w-full h-36 object-cover rounded-2xl" />
         </div>
       )}
 

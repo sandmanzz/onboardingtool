@@ -4,13 +4,16 @@ import {
   ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, Video,
   ListChecks, FileText, Save, Eye, Edit2,
   Check, X, ChevronRight, ClipboardList, Wrench, FileSignature, Calendar, Clock,
-  Image, BarChart3, Link2, Copy,
+  Image, BarChart3, Link2, Copy, QrCode, FileDown, Loader2,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import useToastStore from '../store/useToastStore'
 import MaterialEditor from '../components/MaterialEditor'
 import RichTextEditor from '../components/RichTextEditor'
 import InsightsDrawer from '../components/InsightsDrawer'
+import QRCodeImage from '../components/QRCodeImage'
+import { downloadProgramPdf } from '../utils/programPdf'
+import { supabase } from '../lib/supabaseClient'
 
 const MATERIAL_TYPES = [
   { type: 'video', icon: Video, label: 'Video', color: 'text-purple-600 bg-purple-50' },
@@ -25,9 +28,10 @@ const MATERIAL_TYPES = [
 export default function ProgramEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { programs, addProgram, updateProgram, addStage, updateStage, deleteStage,
+  const { programs, company, addProgram, updateProgram, addStage, updateStage, deleteStage,
     addMaterial, updateMaterial, deleteMaterial, enableShare, disableShare } = useStore()
   const showToast = useToastStore((s) => s.showToast)
+  const [pdfLoading, setPdfLoading] = useState(false)
 
   const isNew = id === 'new'
   const program = isNew ? null : programs.find((p) => p.id === id)
@@ -54,10 +58,10 @@ export default function ProgramEditor() {
     ? programs.find((p) => p.id === activeProgramId)
     : null
 
-  const handleSaveInfo = () => {
+  const handleSaveInfo = async () => {
     if (!form.name.trim()) return
     if (isNew && !activeProgramId) {
-      addProgram(form)
+      await addProgram(form)
       const newId = useStore.getState().programs.slice(-1)[0]?.id
       setActiveProgramId(newId)
       navigate(`/programs/${newId}`, { replace: true })
@@ -69,21 +73,28 @@ export default function ProgramEditor() {
     }
   }
 
-  const handleAddStage = () => {
+  const handleAddStage = async () => {
     if (!newStageName.trim() || !activeProgramId) return
-    addStage(activeProgramId, { name: newStageName.trim(), description: '', deadline: null })
+    await addStage(activeProgramId, { name: newStageName.trim(), description: '', deadline: null })
     setNewStageName('')
     setShowAddStage(false)
     const prog = useStore.getState().programs.find((p) => p.id === activeProgramId)
     if (prog) setExpandedStage(prog.stages.slice(-1)[0]?.id)
   }
 
-  const handleHeaderImageChange = (e) => {
+  const [headerUploading, setHeaderUploading] = useState(false)
+
+  const handleHeaderImageChange = async (e) => {
     const file = e.target.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => setForm((f) => ({ ...f, headerImage: ev.target.result }))
-    reader.readAsDataURL(file)
+    if (!file || !company?.id) return
+    setHeaderUploading(true)
+    const path = `${company.id}/header-${Date.now()}.${file.name.split('.').pop()}`
+    const { error } = await supabase.storage.from('program-images').upload(path, file, { upsert: true })
+    if (!error) {
+      const { data } = supabase.storage.from('program-images').getPublicUrl(path)
+      setForm((f) => ({ ...f, headerImage: data.publicUrl }))
+    }
+    setHeaderUploading(false)
   }
 
   const handleToggleShare = () => {
@@ -100,6 +111,16 @@ export default function ProgramEditor() {
     navigator.clipboard.writeText(shareUrl)
     setLinkCopied(true)
     setTimeout(() => setLinkCopied(false), 2000)
+  }
+
+  const handleDownloadPdf = async () => {
+    if (!currentProgram || pdfLoading) return
+    setPdfLoading(true)
+    try {
+      await downloadProgramPdf(currentProgram, company, shareUrl || null)
+    } finally {
+      setPdfLoading(false)
+    }
   }
 
   const moveStage = (stageId, dir) => {
@@ -164,9 +185,9 @@ export default function ProgramEditor() {
               </div>
             ) : (
               <label className="flex items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-brand-400 hover:bg-brand-50/30 cursor-pointer text-sm text-gray-500 transition-all">
-                <Image size={16} />
-                Upload a banner image shown at the top of this program
-                <input type="file" accept="image/*" className="hidden" onChange={handleHeaderImageChange} />
+                {headerUploading ? <Loader2 size={16} className="animate-spin" /> : <Image size={16} />}
+                {headerUploading ? 'Uploading…' : 'Upload a banner image shown at the top of this program'}
+                <input type="file" accept="image/*" className="hidden" onChange={handleHeaderImageChange} disabled={headerUploading} />
               </label>
             )}
           </div>
@@ -271,14 +292,33 @@ export default function ProgramEditor() {
             Share a read-only overview dashboard for this program — no employee names or personal data included.
           </p>
           {currentProgram?.shareToken && (
-            <div className="flex items-center gap-2">
-              <input className="input flex-1 text-xs" readOnly value={shareUrl} onClick={(e) => e.target.select()} />
-              <button onClick={handleCopyShareUrl} className="btn-secondary shrink-0 flex items-center gap-1.5 px-3">
-                <Copy size={14} />
-                {linkCopied ? 'Copied!' : 'Copy'}
-              </button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <QRCodeImage value={shareUrl} size={96} className="shrink-0" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="flex items-center gap-2">
+                  <input className="input flex-1 text-xs" readOnly value={shareUrl} onClick={(e) => e.target.select()} />
+                  <button onClick={handleCopyShareUrl} className="btn-secondary shrink-0 flex items-center gap-1.5 px-3">
+                    <Copy size={14} />
+                    {linkCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-400 flex items-center gap-1.5">
+                  <QrCode size={12} />
+                  Scan the code to open the public dashboard on any phone
+                </p>
+              </div>
             </div>
           )}
+          <div className={`flex items-center ${currentProgram?.shareToken ? 'mt-4 pt-4 border-t border-gray-100' : ''}`}>
+            <button
+              onClick={handleDownloadPdf}
+              disabled={pdfLoading}
+              className="btn-secondary flex items-center gap-1.5 disabled:opacity-60"
+            >
+              {pdfLoading ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />}
+              Download as PDF
+            </button>
+          </div>
         </div>
       )}
 

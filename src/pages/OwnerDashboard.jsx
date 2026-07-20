@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Building2, Users, DollarSign, Activity, LogOut,
-  TrendingUp, Search, CheckCircle2, Clock, XCircle, ArrowUpRight,
+  TrendingUp, Search, CheckCircle2, Clock, XCircle, ArrowUpRight, Loader2,
 } from 'lucide-react'
-import useStore, { ALL_ACCOUNTS } from '../store/useStore'
+import useStore from '../store/useStore'
+import { supabase } from '../lib/supabaseClient'
 
 const CSS = `
   .owner-search {
@@ -98,15 +99,42 @@ export default function OwnerDashboard() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [planFilter, setPlanFilter] = useState('All')
+  const [accounts, setAccounts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const load = async () => {
+      const [{ data: companies }, { data: profiles }, { data: programs }, { data: employees }] = await Promise.all([
+        supabase.from('companies').select('id, name, created_at'),
+        supabase.from('profiles').select('company_id, email').eq('role', 'admin'),
+        supabase.from('programs').select('id, company_id'),
+        supabase.from('employees').select('id, company_id'),
+      ])
+      const rows = (companies || []).map((c) => ({
+        id: c.id,
+        name: c.name,
+        owner: (profiles || []).find((p) => p.company_id === c.id)?.email || '—',
+        plan: 'Free',
+        status: 'active',
+        mrr: 0,
+        joined: c.created_at,
+        employees: (employees || []).filter((e) => e.company_id === c.id).length,
+        programs: (programs || []).filter((p) => p.company_id === c.id).length,
+      }))
+      setAccounts(rows)
+      setLoading(false)
+    }
+    load()
+  }, [])
 
   const handleLogout = () => { logout(); navigate('/') }
 
-  const totalMRR    = ALL_ACCOUNTS.reduce((s, a) => s + a.mrr, 0)
-  const totalEmps   = ALL_ACCOUNTS.reduce((s, a) => s + a.employees, 0)
-  const activeCount = ALL_ACCOUNTS.filter((a) => a.status === 'active').length
-  const trialCount  = ALL_ACCOUNTS.filter((a) => a.status === 'trial').length
+  const totalMRR    = accounts.reduce((s, a) => s + a.mrr, 0)
+  const totalEmps   = accounts.reduce((s, a) => s + a.employees, 0)
+  const activeCount = accounts.filter((a) => a.status === 'active').length
+  const trialCount  = accounts.filter((a) => a.status === 'trial').length
 
-  const filtered = ALL_ACCOUNTS.filter((a) => {
+  const filtered = accounts.filter((a) => {
     const q = search.toLowerCase()
     const matchQ = !q || a.name.toLowerCase().includes(q) || a.owner.toLowerCase().includes(q)
     const matchP = planFilter === 'All' || a.plan === planFilter
@@ -198,8 +226,8 @@ export default function OwnerDashboard() {
 
           {/* Stat cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
-            <StatCard icon={Building2}  label="Total accounts"  value={ALL_ACCOUNTS.length} color="#6366f1" trend="+2 this month" />
-            <StatCard icon={DollarSign} label="Monthly revenue" value={`$${totalMRR}`} sub={`${activeCount} paying accounts`} color="#10b981" trend="+12%" />
+            <StatCard icon={Building2}  label="Total accounts"  value={accounts.length} color="#6366f1" />
+            <StatCard icon={DollarSign} label="Monthly revenue" value={`$${totalMRR}`} sub={`${activeCount} paying accounts`} color="#10b981" />
             <StatCard icon={Users}      label="Total employees" value={totalEmps} color="#8b5cf6" />
             <StatCard icon={Clock}      label="Active trials"   value={trialCount} sub="Awaiting conversion" color="#f59e0b" />
           </div>
@@ -293,7 +321,13 @@ export default function OwnerDashboard() {
               </tbody>
             </table>
 
-            {filtered.length === 0 && (
+            {loading && (
+              <div style={{ padding: '56px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                <Loader2 size={24} className="animate-spin" color="#cbd5e1" />
+              </div>
+            )}
+
+            {!loading && filtered.length === 0 && (
               <div style={{ padding: '56px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                 <Building2 size={28} color="#e2e8f0" />
                 <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>No accounts match your filter.</p>
@@ -303,7 +337,7 @@ export default function OwnerDashboard() {
             {/* Footer */}
             <div style={{ padding: '12px 18px', borderTop: '1px solid #f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
-                Showing <strong style={{ color: '#64748b' }}>{filtered.length}</strong> of <strong style={{ color: '#64748b' }}>{ALL_ACCOUNTS.length}</strong> accounts
+                Showing <strong style={{ color: '#64748b' }}>{filtered.length}</strong> of <strong style={{ color: '#64748b' }}>{accounts.length}</strong> accounts
               </p>
               <p style={{ margin: 0, fontSize: '11px', color: '#cbd5e1' }}>Last updated just now</p>
             </div>

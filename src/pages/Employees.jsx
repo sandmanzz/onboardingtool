@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users, Plus, Search, UserPlus, ChevronRight, CheckCircle2,
-  Clock, AlertCircle, UserCheck, Calendar, Link2,
+  Clock, AlertCircle, UserCheck, Calendar, Link2, Upload,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import useToastStore from '../store/useToastStore'
 import IconButton from '../components/IconButton'
+import ImportEmployeesModal from '../components/ImportEmployeesModal'
 
 function getInitials(name) {
   return name
@@ -77,6 +78,7 @@ export default function Employees() {
   }
   const [search, setSearch] = useState('')
   const [deptFilter, setDeptFilter] = useState('All')
+  const [showImport, setShowImport] = useState(false)
 
   const departments = ['All', ...new Set(employees.map((e) => e.department))]
 
@@ -119,14 +121,23 @@ export default function Employees() {
             Manage your team and track onboarding progress.
           </p>
         </div>
-        <button
-          onClick={() => navigate('/employees/new')}
-          className="btn-primary flex items-center gap-2 shrink-0"
-        >
-          <Plus size={17} />
-          <span className="hidden sm:inline">Add Employee</span>
-          <span className="sm:hidden">Add</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setShowImport(true)}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <Upload size={16} />
+            <span className="hidden sm:inline">Import CSV</span>
+          </button>
+          <button
+            onClick={() => navigate('/employees/new')}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={17} />
+            <span className="hidden sm:inline">Add Employee</span>
+            <span className="sm:hidden">Add</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -283,6 +294,8 @@ export default function Employees() {
           </div>
         </div>
       )}
+
+      <ImportEmployeesModal open={showImport} onClose={() => setShowImport(false)} />
     </div>
   )
 }

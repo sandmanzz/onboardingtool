@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  Check, ExternalLink, Play, Clock, CheckSquare, Square, Camera, X, Paperclip, Download,
+  Check, ExternalLink, Play, Clock, CheckSquare, Square, X, Paperclip, Download, Upload, FileCheck2,
   Video, ListChecks, FileText, ClipboardList, Wrench, FileSignature, Calendar,
 } from 'lucide-react'
 
@@ -106,9 +106,9 @@ export function ReadingMaterial({ material, onComplete, completed }) {
 export function ChecklistMaterial({ material, onComplete, completed, onDetail, initialDetail }) {
   const [checked, setChecked] = useState(initialDetail?.checked || {})
   const [photos, setPhotos] = useState(initialDetail?.photos || {})
-  const [pendingPhotoIdx, setPendingPhotoIdx] = useState(null)
+  const [pendingProofIdx, setPendingProofIdx] = useState(null)
   const items = (material.items || []).map((it) =>
-    typeof it === 'string' ? { text: it, photoRequired: false } : it
+    typeof it === 'string' ? { text: it, description: '', photoRequired: false } : it
   )
   const allChecked = items.length > 0 && items.every((_, i) => checked[i])
 
@@ -128,20 +128,20 @@ export function ChecklistMaterial({ material, onComplete, completed, onDetail, i
       return
     }
     if (items[idx].photoRequired && !photos[idx]) {
-      setPendingPhotoIdx(idx)
+      setPendingProofIdx(idx)
       return
     }
     check(idx)
   }
 
-  const handlePhotoCapture = (e) => {
+  const handleProofUpload = (e) => {
     const file = e.target.files[0]
-    const idx = pendingPhotoIdx
-    setPendingPhotoIdx(null)
+    const idx = pendingProofIdx
+    setPendingProofIdx(null)
     if (!file || idx === null) return
     const reader = new FileReader()
     reader.onload = (ev) => {
-      const nextPhotos = { ...photos, [idx]: ev.target.result }
+      const nextPhotos = { ...photos, [idx]: { url: ev.target.result, name: file.name, isImage: file.type.startsWith('image/') } }
       setPhotos(nextPhotos)
       check(idx, nextPhotos)
     }
@@ -150,35 +150,51 @@ export function ChecklistMaterial({ material, onComplete, completed, onDetail, i
 
   return (
     <div className="space-y-2">
-      {items.map((item, idx) => (
-        <div
-          key={idx}
-          className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${
-            checked[idx]
-              ? 'bg-green-50 border-green-200'
-              : 'bg-gray-50 border-gray-100 hover:bg-white hover:border-gray-200'
-          }`}
-        >
-          <button onClick={() => toggle(idx)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
-            {checked[idx] ? (
-              <CheckSquare size={20} className="text-green-600 shrink-0" />
-            ) : (
-              <Square size={20} className="text-gray-400 shrink-0" />
+      {items.map((item, idx) => {
+        const proof = photos[idx]
+        return (
+          <div
+            key={idx}
+            className={`w-full p-4 rounded-xl border text-left transition-all ${
+              checked[idx]
+                ? 'bg-green-50 border-green-200'
+                : 'bg-gray-50 border-gray-100 hover:bg-white hover:border-gray-200'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <button onClick={() => toggle(idx)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+                {checked[idx] ? (
+                  <CheckSquare size={20} className="text-green-600 shrink-0" />
+                ) : (
+                  <Square size={20} className="text-gray-400 shrink-0" />
+                )}
+                <span className={`text-sm font-medium ${checked[idx] ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                  {item.text}
+                </span>
+                {item.photoRequired && !checked[idx] && (
+                  <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full shrink-0">
+                    <FileCheck2 size={10} /> Proof required
+                  </span>
+                )}
+              </button>
+              {proof && (
+                proof.isImage ? (
+                  <img src={proof.url} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0" title={proof.name}>
+                    <Paperclip size={13} className="text-gray-500" />
+                  </div>
+                )
+              )}
+            </div>
+            {item.description && (
+              <p className={`text-xs mt-2 ml-8 leading-relaxed ${checked[idx] ? 'text-gray-300' : 'text-gray-500'}`}>
+                {item.description}
+              </p>
             )}
-            <span className={`text-sm font-medium ${checked[idx] ? 'line-through text-gray-400' : 'text-gray-700'}`}>
-              {item.text}
-            </span>
-            {item.photoRequired && !checked[idx] && (
-              <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full shrink-0">
-                <Camera size={10} /> Photo required
-              </span>
-            )}
-          </button>
-          {photos[idx] && (
-            <img src={photos[idx]} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
-          )}
-        </div>
-      ))}
+          </div>
+        )
+      })}
       {allChecked && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-green-100 text-green-700 text-sm font-medium">
           <Check size={16} />
@@ -186,24 +202,29 @@ export function ChecklistMaterial({ material, onComplete, completed, onDetail, i
         </div>
       )}
 
-      {pendingPhotoIdx !== null && (
+      {pendingProofIdx !== null && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Camera size={16} /> Photo Required
+                <FileCheck2 size={16} /> Proof Required
               </h3>
-              <button onClick={() => setPendingPhotoIdx(null)} className="btn-ghost p-1.5">
+              <button onClick={() => setPendingProofIdx(null)} className="btn-ghost p-1.5">
                 <X size={16} />
               </button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">
-              Take or upload a photo to confirm "{items[pendingPhotoIdx]?.text}" is done.
+            <p className="text-sm text-gray-500 mb-2">
+              Upload a photo or file to confirm "{items[pendingProofIdx]?.text}" is done.
             </p>
+            {items[pendingProofIdx]?.description && (
+              <p className="text-xs text-gray-500 bg-gray-50 border border-gray-100 rounded-lg p-2.5 mb-4">
+                {items[pendingProofIdx].description}
+              </p>
+            )}
             <label className="flex items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-brand-400 hover:bg-brand-50/30 cursor-pointer text-sm text-gray-600 transition-all">
-              <Camera size={16} />
-              Take / Upload Photo
-              <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoCapture} />
+              <Upload size={16} />
+              Take Photo or Upload File
+              <input type="file" accept="image/*,.pdf,.doc,.docx" className="hidden" onChange={handleProofUpload} />
             </label>
           </div>
         </div>

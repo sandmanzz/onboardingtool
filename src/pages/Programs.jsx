@@ -11,15 +11,35 @@ import {
   FileText,
   Copy,
   BarChart3,
+  FileDown,
 } from 'lucide-react'
 import useStore from '../store/useStore'
+import useToastStore from '../store/useToastStore'
 import IconButton from '../components/IconButton'
 import InsightsDrawer from '../components/InsightsDrawer'
+import NewProgramModal from '../components/NewProgramModal'
+import { downloadProgramPdf } from '../utils/programPdf'
 
 export default function Programs() {
   const navigate = useNavigate()
-  const { programs, deleteProgram, duplicateProgram } = useStore()
+  const { programs, company, deleteProgram, duplicateProgram } = useStore()
   const [insightsProgramId, setInsightsProgramId] = useState(null)
+  const [pdfLoadingId, setPdfLoadingId] = useState(null)
+  const [showNewProgram, setShowNewProgram] = useState(false)
+  const showToast = useToastStore((s) => s.showToast)
+
+  const handleDownloadPdf = async (program) => {
+    if (pdfLoadingId) return
+    setPdfLoadingId(program.id)
+    try {
+      const shareUrl = program.shareToken ? `${window.location.origin}/share/${program.shareToken}` : null
+      await downloadProgramPdf(program, company, shareUrl)
+    } catch {
+      showToast('Could not generate PDF', 'error')
+    } finally {
+      setPdfLoadingId(null)
+    }
+  }
 
   return (
     <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto">
@@ -31,7 +51,7 @@ export default function Programs() {
           </p>
         </div>
         <button
-          onClick={() => navigate('/programs/new')}
+          onClick={() => setShowNewProgram(true)}
           className="btn-primary flex items-center gap-2 shrink-0"
         >
           <Plus size={16} />
@@ -53,7 +73,7 @@ export default function Programs() {
             learning — from videos to checklists to readings.
           </p>
           <button
-            onClick={() => navigate('/programs/new')}
+            onClick={() => setShowNewProgram(true)}
             className="btn-primary inline-flex items-center gap-2"
           >
             <Plus size={16} />
@@ -155,6 +175,14 @@ export default function Programs() {
                       onClick={() => duplicateProgram(program.id)}
                       className="btn-ghost p-2"
                     />
+                    <div className="hidden sm:block">
+                      <IconButton
+                        icon={FileDown}
+                        label={pdfLoadingId === program.id ? 'Generating…' : 'Download PDF'}
+                        onClick={() => handleDownloadPdf(program)}
+                        className="btn-ghost p-2"
+                      />
+                    </div>
                     <IconButton
                       icon={Trash2}
                       label="Delete"
@@ -172,6 +200,7 @@ export default function Programs() {
       )}
 
       <InsightsDrawer programId={insightsProgramId} onClose={() => setInsightsProgramId(null)} />
+      <NewProgramModal open={showNewProgram} onClose={() => setShowNewProgram(false)} />
     </div>
   )
 }

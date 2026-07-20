@@ -132,7 +132,7 @@ const Logo = ({ size = 34 }) => (
 )
 
 export default function Login() {
-  const { login, loginAs } = useStore()
+  const { login } = useStore()
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPw, setShowPw] = useState(false)
@@ -140,16 +140,19 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [showDemo, setShowDemo] = useState(false)
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const doLogin = async (email, password) => {
     setError('')
-    if (!form.email || !form.password) { setError('Please fill in all fields.'); return }
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 500))
-    const res = login(form.email, form.password)
+    const res = await login(email, password)
     setLoading(false)
     if (!res.success) { setError(res.error); return }
     navigate(res.user?.role === 'owner' ? '/owner' : '/dashboard')
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!form.email || !form.password) { setError('Please fill in all fields.'); return }
+    doLogin(form.email, form.password)
   }
 
   return (
@@ -309,8 +312,8 @@ export default function Login() {
             {showDemo && (
               <div style={{ marginTop: '8px', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
                 {DEMO_ACCOUNTS.map((acc) => (
-                  <button key={acc.id} onClick={() => { loginAs(acc.id); navigate('/dashboard') }} className="demo-row">
-                    <div style={{ width: '34px', height: '34px', borderRadius: '9px', backgroundColor: acc.company.primaryColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '14px', flexShrink: 0 }}>
+                  <button key={acc.id} onClick={() => doLogin(acc.email, acc.password)} className="demo-row">
+                    <div style={{ width: '34px', height: '34px', borderRadius: '9px', backgroundColor: acc.badge === 'Sample Data' ? '#f59e0b' : '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '14px', flexShrink: 0 }}>
                       {acc.label.charAt(0)}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
