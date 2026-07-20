@@ -1,0 +1,6 @@
+// Copy this file to Supabase.xcconfig and fill the values from your Supabase
+// project. Supabase publishable keys are designed for client applications;
+// Row Level Security is what protects workspace data.
+EMPTY =
+SUPABASE_URL = https:/$(EMPTY)/your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY = sb_publishable_replace_me

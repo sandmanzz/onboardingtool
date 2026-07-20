@@ -1,0 +1,530 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000001 /* Models.swift */; };
+		A10000000000000000000002 /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000002 /* SampleData.swift */; };
+		A10000000000000000000003 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* Persistence.swift */; };
+		A10000000000000000000004 /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000004 /* AppStore.swift */; };
+		A10000000000000000000005 /* SimpleBoardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000005 /* SimpleBoardApp.swift */; };
+		A10000000000000000000006 /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000006 /* SharedViews.swift */; };
+		A10000000000000000000007 /* RootViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000007 /* RootViews.swift */; };
+		A10000000000000000000008 /* DashboardAndCompanyViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000008 /* DashboardAndCompanyViews.swift */; };
+		A10000000000000000000009 /* ProgramViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* ProgramViews.swift */; };
+		A1000000000000000000000A /* EmployeeViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000A /* EmployeeViews.swift */; };
+		A1000000000000000000000B /* PreviewViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000B /* PreviewViews.swift */; };
+		A1000000000000000000000C /* Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000C /* Resources/Assets.xcassets */; };
+		A1000000000000000000000E /* EmployeePortalViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000E /* EmployeePortalViews.swift */; };
+		A10000000000000000000010 /* SupabaseEmployeePortal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* SupabaseEmployeePortal.swift */; };
+		A20000000000000000000001 /* SimpleBoardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* SimpleBoardTests.swift */; };
+		A30000000000000000000001 /* SimpleBoardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30000000000000000000001 /* SimpleBoardUITests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C20000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F00000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D10000000000000000000001;
+			remoteInfo = SimpleBoard;
+		};
+		C30000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F00000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D10000000000000000000001;
+			remoteInfo = SimpleBoard;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		B10000000000000000000001 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		B10000000000000000000002 /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
+		B10000000000000000000003 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
+		B10000000000000000000004 /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		B10000000000000000000005 /* SimpleBoardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBoardApp.swift; sourceTree = "<group>"; };
+		B10000000000000000000006 /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
+		B10000000000000000000007 /* RootViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViews.swift; sourceTree = "<group>"; };
+		B10000000000000000000008 /* DashboardAndCompanyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardAndCompanyViews.swift; sourceTree = "<group>"; };
+		B10000000000000000000009 /* ProgramViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramViews.swift; sourceTree = "<group>"; };
+		B1000000000000000000000A /* EmployeeViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmployeeViews.swift; sourceTree = "<group>"; };
+		B1000000000000000000000B /* PreviewViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewViews.swift; sourceTree = "<group>"; };
+		B1000000000000000000000C /* Resources/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources/Assets.xcassets; sourceTree = "<group>"; };
+		B1000000000000000000000D /* SimpleBoard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SimpleBoard.entitlements; sourceTree = "<group>"; };
+		B1000000000000000000000E /* EmployeePortalViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmployeePortalViews.swift; sourceTree = "<group>"; };
+		B10000000000000000000010 /* SupabaseEmployeePortal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseEmployeePortal.swift; sourceTree = "<group>"; };
+		B10000000000000000000011 /* Supabase.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Supabase.xcconfig; sourceTree = "<group>"; };
+		B10000000000000000000012 /* Supabase.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Supabase.xcconfig.example; sourceTree = "<group>"; };
+		B10000000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B20000000000000000000001 /* SimpleBoardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBoardTests.swift; sourceTree = "<group>"; };
+		B30000000000000000000001 /* SimpleBoardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleBoardUITests.swift; sourceTree = "<group>"; };
+		E10000000000000000000001 /* SimpleBoard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimpleBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E20000000000000000000001 /* SimpleBoardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleBoardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E30000000000000000000001 /* SimpleBoardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SimpleBoardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C10000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C20000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C30000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F00000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000001 /* SimpleBoard */,
+				F20000000000000000000001 /* SimpleBoardTests */,
+				F30000000000000000000001 /* SimpleBoardUITests */,
+				F40000000000000000000001 /* Config */,
+				F00000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F00000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E10000000000000000000001 /* SimpleBoard.app */,
+				E20000000000000000000001 /* SimpleBoardTests.xctest */,
+				E30000000000000000000001 /* SimpleBoardUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F10000000000000000000001 /* SimpleBoard */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000005 /* SimpleBoardApp.swift */,
+				B10000000000000000000001 /* Models.swift */,
+				B10000000000000000000002 /* SampleData.swift */,
+				B10000000000000000000003 /* Persistence.swift */,
+				B10000000000000000000004 /* AppStore.swift */,
+				B10000000000000000000006 /* SharedViews.swift */,
+				B10000000000000000000007 /* RootViews.swift */,
+				B10000000000000000000008 /* DashboardAndCompanyViews.swift */,
+				B10000000000000000000009 /* ProgramViews.swift */,
+				B1000000000000000000000A /* EmployeeViews.swift */,
+				B1000000000000000000000B /* PreviewViews.swift */,
+				B1000000000000000000000E /* EmployeePortalViews.swift */,
+				B10000000000000000000010 /* SupabaseEmployeePortal.swift */,
+				B10000000000000000000013 /* Info.plist */,
+				B1000000000000000000000C /* Resources/Assets.xcassets */,
+				B1000000000000000000000D /* SimpleBoard.entitlements */,
+			);
+			path = SimpleBoard;
+			sourceTree = "<group>";
+		};
+		F40000000000000000000001 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000011 /* Supabase.xcconfig */,
+				B10000000000000000000012 /* Supabase.xcconfig.example */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		F20000000000000000000001 /* SimpleBoardTests */ = {
+			isa = PBXGroup;
+			children = (
+				B20000000000000000000001 /* SimpleBoardTests.swift */,
+			);
+			path = SimpleBoardTests;
+			sourceTree = "<group>";
+		};
+		F30000000000000000000001 /* SimpleBoardUITests */ = {
+			isa = PBXGroup;
+			children = (
+				B30000000000000000000001 /* SimpleBoardUITests.swift */,
+			);
+			path = SimpleBoardUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D10000000000000000000001 /* SimpleBoard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D10000000000000000000010 /* Build configuration list for PBXNativeTarget "SimpleBoard" */;
+			buildPhases = (
+				C10000000000000000000003 /* Sources */,
+				C10000000000000000000001 /* Frameworks */,
+				C10000000000000000000004 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SimpleBoard;
+			productName = SimpleBoard;
+			productReference = E10000000000000000000001 /* SimpleBoard.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D20000000000000000000001 /* SimpleBoardTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D20000000000000000000010 /* Build configuration list for PBXNativeTarget "SimpleBoardTests" */;
+			buildPhases = (
+				C20000000000000000000003 /* Sources */,
+				C20000000000000000000002 /* Frameworks */,
+				C20000000000000000000004 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C20000000000000000000005 /* PBXTargetDependency */,
+			);
+			name = SimpleBoardTests;
+			productName = SimpleBoardTests;
+			productReference = E20000000000000000000001 /* SimpleBoardTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D30000000000000000000001 /* SimpleBoardUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D30000000000000000000010 /* Build configuration list for PBXNativeTarget "SimpleBoardUITests" */;
+			buildPhases = (
+				C30000000000000000000003 /* Sources */,
+				C30000000000000000000002 /* Frameworks */,
+				C30000000000000000000004 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C30000000000000000000005 /* PBXTargetDependency */,
+			);
+			name = SimpleBoardUITests;
+			productName = SimpleBoardUITests;
+			productReference = E30000000000000000000001 /* SimpleBoardUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F00000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					D10000000000000000000001 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					D20000000000000000000001 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = D10000000000000000000001;
+					};
+					D30000000000000000000001 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = D10000000000000000000001;
+					};
+				};
+			};
+			buildConfigurationList = F00000000000000000000010 /* Build configuration list for PBXProject "SimpleBoard" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F00000000000000000000002;
+			productRefGroup = F00000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D10000000000000000000001 /* SimpleBoard */,
+				D20000000000000000000001 /* SimpleBoardTests */,
+				D30000000000000000000001 /* SimpleBoardUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C10000000000000000000004 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000000000000000000000C /* Resources/Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C20000000000000000000004 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C30000000000000000000004 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C10000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* Models.swift in Sources */,
+				A10000000000000000000002 /* SampleData.swift in Sources */,
+				A10000000000000000000003 /* Persistence.swift in Sources */,
+				A10000000000000000000004 /* AppStore.swift in Sources */,
+				A10000000000000000000005 /* SimpleBoardApp.swift in Sources */,
+				A10000000000000000000006 /* SharedViews.swift in Sources */,
+				A10000000000000000000007 /* RootViews.swift in Sources */,
+				A10000000000000000000008 /* DashboardAndCompanyViews.swift in Sources */,
+				A10000000000000000000009 /* ProgramViews.swift in Sources */,
+				A1000000000000000000000A /* EmployeeViews.swift in Sources */,
+				A1000000000000000000000B /* PreviewViews.swift in Sources */,
+				A1000000000000000000000E /* EmployeePortalViews.swift in Sources */,
+				A10000000000000000000010 /* SupabaseEmployeePortal.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C20000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A20000000000000000000001 /* SimpleBoardTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C30000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A30000000000000000000001 /* SimpleBoardUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C20000000000000000000005 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D10000000000000000000001 /* SimpleBoard */;
+			targetProxy = C20000000000000000000001 /* PBXContainerItemProxy */;
+		};
+		C30000000000000000000005 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D10000000000000000000001 /* SimpleBoard */;
+			targetProxy = C30000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		D10000000000000000000011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B10000000000000000000011 /* Supabase.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = SimpleBoard/SimpleBoard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = 8PLMRB7SWH;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SimpleBoard/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Simple Board";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.michael.simpleboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+		D10000000000000000000012 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B10000000000000000000011 /* Supabase.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = SimpleBoard/SimpleBoard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = 8PLMRB7SWH;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SimpleBoard/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Simple Board";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.michael.simpleboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+		D20000000000000000000011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.michael.simpleboard.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SimpleBoard.app/Contents/MacOS/SimpleBoard";
+			};
+			name = Debug;
+		};
+		D20000000000000000000012 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.michael.simpleboard.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SimpleBoard.app/Contents/MacOS/SimpleBoard";
+			};
+			name = Release;
+		};
+		D30000000000000000000011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.michael.simpleboard.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_TARGET_NAME = SimpleBoard;
+			};
+			name = Debug;
+		};
+		D30000000000000000000012 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.michael.simpleboard.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TEST_TARGET_NAME = SimpleBoard;
+			};
+			name = Release;
+		};
+		F00000000000000000000011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		F00000000000000000000012 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D10000000000000000000010 /* Build configuration list for PBXNativeTarget "SimpleBoard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D10000000000000000000011 /* Debug */,
+				D10000000000000000000012 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D20000000000000000000010 /* Build configuration list for PBXNativeTarget "SimpleBoardTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D20000000000000000000011 /* Debug */,
+				D20000000000000000000012 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D30000000000000000000010 /* Build configuration list for PBXNativeTarget "SimpleBoardUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D30000000000000000000011 /* Debug */,
+				D30000000000000000000012 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F00000000000000000000010 /* Build configuration list for PBXProject "SimpleBoard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F00000000000000000000011 /* Debug */,
+				F00000000000000000000012 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F00000000000000000000001 /* Project object */;
+}
